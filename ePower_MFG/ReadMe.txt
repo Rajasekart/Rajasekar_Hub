@@ -1,3 +1,14 @@
+Changes in CyberSwitching Manufacturing Tool V1.08:
+---------------------------------------------------
+1. Added support for System Name.
+2. Updated to store the Serial Number and Mac Address in Programmed_devices.csv file 
+   to validate the duplicate serial number and MAC address usage.
+3. Updated to display the text as "ePowerHD" for ePowerHD devices selection and for
+   other device selection, the text will be displayed as "ePowerManager".
+4. Updated to store the System Name, Mac Address, Model Number, Date, Time, Device Type,
+   Serial number and MAC address. It is used to read and display back in corressponding 
+   fields after application launch.
+
 ================================================================================
     MICROSOFT FOUNDATION CLASS LIBRARY : ePower_MFG Project Overview
 ===============================================================================

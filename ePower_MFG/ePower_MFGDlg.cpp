@@ -80,6 +80,8 @@ CePower_MFGDlg::CePower_MFGDlg(CWnd* pParent /*=NULL*/)
 	m_nDivValue = 0;
 	m_nDeviceType = -1;
 	m_bGreen = FALSE;
+	m_bDefaultHostText = FALSE;
+	m_bDefaultSystText = FALSE;
 
 	m_cszPidValues.RemoveAll();
 	m_cszVidValues.RemoveAll();
@@ -110,6 +112,7 @@ void CePower_MFGDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_DEVICE, m_cComboDevice);
 	DDX_Control(pDX, IDC_EDIT_SYSTEM_NM, m_cEditSysNm);
 	DDX_Control(pDX, IDOK, m_cButWrite);
+	DDX_Control(pDX, IDC_BUTN_GENERATE, m_cButGenerate);
 }
 
 BEGIN_MESSAGE_MAP(CePower_MFGDlg, CDialog)
@@ -135,6 +138,7 @@ BEGIN_MESSAGE_MAP(CePower_MFGDlg, CDialog)
 	ON_EN_CHANGE(IDC_EDIT_HOST_NM, &CePower_MFGDlg::OnEnChangeEditHostNm)
 	ON_EN_CHANGE(IDC_EDIT_MAC_ADDR, &CePower_MFGDlg::OnEnChangeEditMacAddr)
 	ON_BN_CLICKED(IDC_BTN_REFRESH, &CePower_MFGDlg::OnBnClickedBtnRefresh)
+	ON_EN_CHANGE(IDC_EDIT_SYSTEM_NM, &CePower_MFGDlg::OnEnChangeEditSystemNm)
 END_MESSAGE_MAP()
 
 
@@ -2144,30 +2148,130 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 	UINT				nNum = 0;
 	UINT				nVal = 0;
 	UINT				nTotal = 0;
+	BOOL				bSerial = FALSE;
+	BOOL				bMacAdd = FALSE;
+	BOOL				bDataEnd = FALSE;
 	BOOL				bFileFound = FALSE;
+	BOOL				bPrgFileFound = FALSE;
 	CString				cszCSVFilePath = m_cszBasePath;
+	CString				cszPrgDevFile =  m_cszBasePath;
 	CString				cszLoad;
 	CStringArray		cszDataArray;
 	CFileFind			cFinder;
 
 	cszCSVFilePath += STR_CSV_FILE_NM;
+	cszPrgDevFile += STR_PRG_FILENM;
 
 	if (cFinder.FindFile(cszCSVFilePath))
 	{
 		cFinder.Close();
-
-		CFileCSV			cFileCSV(cszCSVFilePath, CFileCSV::modeRead);
-
-		cFileCSV.ReadData(cszDataArray);
-		cFileCSV.Close();
-
 		bFileFound = TRUE;
+	}
+
+	if (cFinder.FindFile(cszPrgDevFile))
+	{
+		cFinder.Close();
+		bPrgFileFound = TRUE;
+	}
+
+	if (bPrgFileFound)
+	{
+		CFileCSV		cPrgDev(cszPrgDevFile, CFileCSV::modeRead);
+
+		cPrgDev.SeekToBegin();
+
+		cszDataArray.RemoveAll();
+		cPrgDev.ReadData(cszDataArray);
+	
+		nNum = 0;
+		bSerial = TRUE;
+		bMacAdd = FALSE;
+		bDataEnd = FALSE;
+		m_cszAllSerialNum.RemoveAll();
+		m_cszAllMACAddrss.RemoveAll();
+
+		do
+		{
+			if (bSerial)
+			{
+				nNum += 6;
+
+				// Get SERIAL NUMBER
+				if (nNum < (UINT)cszDataArray.GetSize())
+				{
+					cszLoad.Empty();
+					cszLoad = cszDataArray.ElementAt(nNum++);
+					m_cszAllSerialNum.Add(cszLoad);
+				}
+
+				bSerial = FALSE;
+				bMacAdd = TRUE;
+				bDataEnd = FALSE;
+			}
+
+			if (bMacAdd)
+			{				
+				// Get MAC ADDRESS
+				if (nNum < (UINT)cszDataArray.GetSize())
+				{
+					cszLoad.Empty();
+					cszLoad = cszDataArray.ElementAt(nNum++);
+					m_cszAllMACAddrss.Add(cszLoad);
+				}
+
+				bSerial = FALSE;
+				bMacAdd = FALSE;
+				bDataEnd = TRUE;
+			}
+
+			if (bDataEnd)
+			{
+				cszLoad.Empty();
+				cszLoad = cszDataArray.ElementAt(nNum++);
+
+				if (!cszLoad.CompareNoCase(_T("##DATAEND##")))
+				{
+					cszDataArray.RemoveAll();
+					cPrgDev.ReadData(cszDataArray);
+					if (cszDataArray.GetSize())
+					{
+						nNum = 0;
+						bSerial = TRUE;
+						bMacAdd = FALSE;
+						bDataEnd = FALSE;
+
+						continue;
+					}
+					else
+					{
+						cszDataArray.RemoveAll();
+						break;		// Data buffer END
+					}
+				}
+				else
+				{
+					bSerial = FALSE;
+					bMacAdd = FALSE;
+					bDataEnd = TRUE;
+				}
+			}
+		
+		} while (TRUE);
+
+		cPrgDev.Close();
 	}
 
 	if (bFileFound)
 	{
+		CFileCSV		cFileCSV(cszCSVFilePath, CFileCSV::modeRead);
+
+		cszDataArray.RemoveAll();
+		cFileCSV.ReadData(cszDataArray);
+		cFileCSV.Close();
+
 		nNum = 0;
 
+		// 1
 		// DEVICE TYPE
 		cszLoad.Empty();
 		cszLoad = cszDataArray.ElementAt(nNum++);
@@ -2176,12 +2280,14 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 		m_cComboDevice.SetCurSel(nPos);
 		OnCbnSelchangeDevice();
 
+		// 2
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Copy MODEL NAME
 			m_cEditModelNm.SetWindowText(cszDataArray.ElementAt(nNum++));
 		}
 
+		// 3
 		#if 0
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
@@ -2190,8 +2296,10 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 		}
 		#else
 		m_cEditSerialNum.SetWindowText(_T(""));
+		nNum++;
 		#endif
 
+		// 4
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Select MODEL NUMBER
@@ -2208,6 +2316,7 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 			}
 		}
 
+		// 5
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Select SUB MODEL NUMBER
@@ -2224,6 +2333,7 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 			}
 		}
 
+		// 6
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Select END MODEL NUMBER
@@ -2239,18 +2349,21 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 			}
 		}
 
+		// 7
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Copy MANUFACTURE DATE
 			m_cEditManufacDate.SetWindowText(cszDataArray.ElementAt(nNum++));
 		}
 
+		// 8
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Copy HOST NAME
 			m_cEditHostNm.SetWindowText(cszDataArray.ElementAt(nNum++));
 		}
 
+		// 9
 		#if 0
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
@@ -2260,18 +2373,28 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 		}
 		#else
 		m_cEditMACAddr.SetWindowTextA(_T(""));
+		nNum++;
 		#endif
 
+		// 10
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Copy STAGGER ON DELAY
 			m_cEditStaggerOnDelay.SetWindowText(cszDataArray.ElementAt(nNum++));
 		}
 
+		// 11
 		if (nNum < (UINT)cszDataArray.GetSize())
 		{
 			// Copy STAGGER OFF DELAY
 			m_cEditStaggerOffDelay.SetWindowText(cszDataArray.ElementAt(nNum++));
+		}
+
+		// 12
+		if (nNum < (UINT)cszDataArray.GetSize())
+		{
+			// Copy SYSTEM NAME
+			m_cEditSysNm.SetWindowText(cszDataArray.ElementAt(nNum++));
 		}
 
 		#if 0
@@ -2392,7 +2515,7 @@ BOOL CePower_MFGDlg::ReadCSVDeviceType()
 	return bFileFound;
 }
 
-BOOL CePower_MFGDlg::WriteCSVFile()
+BOOL CePower_MFGDlg::WriteCSVFile(BOOL bMessage)
 {
 	BOOL				bRet = TRUE;
 	UINT				nNum = 0;
@@ -2405,10 +2528,12 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	CStringArray		cszDataArray;
 	CFileFind			cFinder;
 	CString				cszCSVFilePath = m_cszBasePath;
+	CString				cszPrgDevFile =  m_cszBasePath;
 
 	ShowPopupDlg(DLG_POPUP_CREATE);
 
 	cszCSVFilePath += STR_CSV_FILE_NM;
+	cszPrgDevFile += STR_PRG_FILENM;
 
 	if (cFinder.FindFile(cszCSVFilePath))
 	{
@@ -2417,6 +2542,7 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	}
 
 	CFileCSV		cFileCSV(cszCSVFilePath, CFileCSV::modeWrite);
+	CFileCSV		cPrgDev(cszPrgDevFile, CFileCSV::modeWrite);
 
 	cszDataArray.RemoveAll();
 
@@ -2433,9 +2559,9 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	ShowPopupDlg(DLG_POPUP_REFRESH);
 
 	// Read SERIAL NUMBER
-	/*cszLoad.Empty();
+	cszLoad.Empty();
 	m_cEditSerialNum.GetWindowText(cszLoad);
-	cszDataArray.Add(cszLoad);*/
+	cszDataArray.Add(cszLoad);
 
 	// Read MODEL NUMBER
 	cszLoad.Empty();
@@ -2467,10 +2593,10 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	ShowPopupDlg(DLG_POPUP_REFRESH);
 
 	// Read MAC ADDRESS
-	/*cszLoad.Empty();
+	cszLoad.Empty();
 	cszLoad = STR_MAC_ADDR_PREFIX;
-	cszLoad += cszGenRandNum;
-	cszDataArray.Add(cszLoad);*/
+	cszLoad += m_cszGenRandNum;
+	cszDataArray.Add(cszLoad);
 
 	// Read STAGGER ON DELAY
 	cszLoad.Empty();
@@ -2480,6 +2606,13 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	// Read STAGGER OFF DELAY
 	cszLoad.Empty();
 	m_cEditStaggerOffDelay.GetWindowText(cszLoad);
+	cszDataArray.Add(cszLoad);
+
+	ShowPopupDlg(DLG_POPUP_REFRESH);
+
+	// Read SYSTEM NAME
+	cszLoad.Empty();
+	m_cEditSysNm.GetWindowText(cszLoad);
 	cszDataArray.Add(cszLoad);
 
 	ShowPopupDlg(DLG_POPUP_REFRESH);
@@ -2495,6 +2628,17 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 		{
 			nNumRowsChk = nTotal / 2;
 		}
+
+		cszLoad.Empty();
+		m_cComboModelNum.GetLBText(m_cComboModelNum.GetCurSel(), cszLoad);
+
+		if ((m_nDeviceType == DEVICE_PM10) && (!cszLoad.CompareNoCase(STR_PM10_U_VERS)))
+		{
+			nNumRowsChk = MAX_OUTLET_NUM;
+			nTotal = PM10U_MAX_OUTLETS;
+		}
+
+		cszLoad.Empty();
 
 		for (nNum = 0; nNum < nTotal; nNum++)
 		{
@@ -2531,11 +2675,100 @@ BOOL CePower_MFGDlg::WriteCSVFile()
 	cFileCSV.WriteData(cszDataArray);
 	cFileCSV.Close();
 
-	ShowPopupDlg(DLG_POPUP_DESTROY);
+	cszDataArray.RemoveAll();
+
+	/// DATA NEED TO TRACK
+	/*cszLoad.Empty();
+	cszLoad = _T("##DATASTART##");
+	cszDataArray.Add(cszLoad);*/
+
+	// WRITE DATE DATA
+	CTime			cTm(CTime::GetCurrentTime());
+	cszLoad.Empty();
+	cszLoad = cTm.Format(_T("%d %b %Y"));
+	cszDataArray.Add(cszLoad);
+
+	// WRITE TIME DATA
+	cszLoad.Empty();
+	cszLoad = cTm.Format(_T("%H:%M:%S"));
+	cszDataArray.Add(cszLoad);
+
+	// WRITE SELECTED DEVICE TYPE
+	cszLoad.Empty();
+	if (m_nDeviceType == DEVICE_EPOWER)
+	{	// For ePowerHD version
+		cszLoad = _T("ePowerHD");
+	}
+	else if (m_nDeviceType == DEVICE_EPOWER_CT)
+	{	// For ePower Manager CT version
+		cszLoad = _T("ePower Manager - CT");
+	}
+	else if (m_nDeviceType == DEVICE_PM10)
+	{
+		cszLoad.Empty();
+		m_cComboModelNum.GetLBText(m_cComboModelNum.GetCurSel(), cszLoad);
+		if (!cszLoad.CompareNoCase(STR_PM10_U_VERS))
+		{	// For PM10U version
+			cszLoad = _T("ePower Manager - PM10U");
+		}
+		else
+		{	// For PM10 version
+			cszLoad = _T("ePower Manager - PM10");
+		}
+	}
+	else if (m_nDeviceType == DEVICE_PM9S9)
+	{
+		cszLoad = _T("ePower Manager - PM9S9");
+	}
+	cszDataArray.Add(cszLoad);
+
+	// WRITE THREE MODEL NUMBERS
+	cszLoad.Empty();
+	m_cComboModelNum.GetLBText(m_cComboModelNum.GetCurSel(), cszLoad);
+	cszDataArray.Add(cszLoad);
 
 	cszLoad.Empty();
-	cszLoad.LoadString(IDS_STR_SAVE_SETTINGS_MESS);
-	AfxMessageBox(cszLoad, MB_OK | MB_ICONINFORMATION);
+	m_cComboModelNumSub.GetLBText(m_cComboModelNumSub.GetCurSel(), cszLoad);
+	cszDataArray.Add(cszLoad);
+
+	cszLoad.Empty();
+	m_cComboModelNumEnd.GetLBText(m_cComboModelNumEnd.GetCurSel(), cszLoad);
+	cszDataArray.Add(cszLoad);
+
+	// WRITE SERIAL NUMBER
+	cszLoad.Empty();
+	m_cEditSerialNum.GetWindowText(cszLoad);
+	cszDataArray.Add(cszLoad);
+
+	// WRITE MAC ADDRESS
+	cszLoad.Empty();
+	cszLoad = STR_MAC_ADDR_PREFIX;
+	cszLoad += m_cszGenRandNum;
+	cszDataArray.Add(cszLoad);
+
+	// WRITE DATA END ##DATAEND## 
+	cszLoad.Empty();
+	cszLoad = _T("##DATAEND##");
+	cszDataArray.Add(cszLoad);
+
+	cPrgDev.SeekToEnd();
+	cPrgDev.WriteData(cszDataArray);
+	cPrgDev.Close();
+
+	ShowPopupDlg(DLG_POPUP_DESTROY);
+
+	if (bMessage)
+	{
+		cszLoad.Empty();
+		cszLoad.LoadString(IDS_STR_SAVE_SETTINGS_MESS);
+		AfxMessageBox(cszLoad, MB_OK | MB_ICONINFORMATION);
+	}
+	else
+	{
+		cszLoad.Empty();
+		cszLoad.LoadString(IDS_STR_SUCCESS_MESS);
+		AfxMessageBox(cszLoad, MB_OK | MB_ICONINFORMATION);
+	}
 
 	return bRet;
 }
@@ -2561,6 +2794,7 @@ void CePower_MFGDlg::OnBnClickedOk()
 {
 	// TODO: Add your control notification handler code here
 	//OnOK();
+	int					nNum = 0;
 	UINT				nValue = 0;
 	CString				cszLoad;
 	CString				cszTemp;
@@ -2718,6 +2952,49 @@ void CePower_MFGDlg::OnBnClickedOk()
 		AfxMessageBox(cszLoad, MB_OK | MB_ICONSTOP);
 		m_cEditSysNm.SetFocus();
 		return;
+	}
+
+	// Check Duplicate Serial Number presence
+	cszLoad.Empty();
+	m_cEditSerialNum.GetWindowText(cszLoad);
+	for (nNum = 0; nNum < m_cszAllSerialNum.GetSize(); nNum++)
+	{
+		cszTemp.Empty();
+		cszTemp = m_cszAllSerialNum.ElementAt(nNum);
+		if (!cszLoad.CompareNoCase(cszTemp))
+		{
+			if (IDNO == AfxMessageBox(_T("This Serial number is already flashed with another device. Are you sure want to use it again."), MB_YESNO | MB_ICONWARNING))
+			{
+				m_cEditSerialNum.SetFocus();
+				return;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	// Check Duplicate MAC Address presence
+	cszLoad.Empty();
+	cszLoad = STR_MAC_ADDR_PREFIX;
+	cszLoad += m_cszGenRandNum;
+	for (nNum = 0; nNum < m_cszAllMACAddrss.GetSize(); nNum++)
+	{
+		cszTemp.Empty();
+		cszTemp = m_cszAllMACAddrss.ElementAt(nNum);
+		if (!cszLoad.CompareNoCase(cszTemp))
+		{
+			if (IDNO == AfxMessageBox(_T("This MAC address is already flashed with another device. Are you sure want to use it again."), MB_YESNO | MB_ICONWARNING))
+			{
+				m_cEditMACAddr.SetFocus();
+				return;
+			}
+			else
+			{
+				break;
+			}
+		}
 	}
 
 	WriteStaticInfo();
@@ -3494,10 +3771,22 @@ BOOL CePower_MFGDlg::WriteStaticInfo()
 	else
 	{
 		cszLoad.Empty();
+		m_cEditSerialNum.GetWindowText(cszLoad);
+		m_cszAllSerialNum.Add(cszLoad);
+
+		cszLoad.Empty();
+		cszLoad = STR_MAC_ADDR_PREFIX;
+		cszLoad += m_cszGenRandNum;
+		m_cszAllMACAddrss.Add(cszLoad);
+
+		/*cszLoad.Empty();
 		cszLoad.LoadString(IDS_STR_SUCCESS_MESS);
-		AfxMessageBox(cszLoad, MB_OK | MB_ICONINFORMATION);
+		AfxMessageBox(cszLoad, MB_OK | MB_ICONINFORMATION);*/
 
 		m_cButReadPDU.EnableWindow(TRUE);
+
+		//OnBnClickedButtonLoad();
+		WriteCSVFile(FALSE);
 	}
 
 	return bRet;
@@ -4211,16 +4500,50 @@ BOOL CePower_MFGDlg::PreTranslateMessage(MSG* pMsg)
 void CePower_MFGDlg::OnCbnSelchangeDevice()
 {
 	// TODO: Add your control notification handler code here
+	CString			cszLoad;
+
 	m_nDeviceType = m_cComboDevice.GetCurSel();
 
 	LoadModelSubNum();
 	GenerateModelNum();
+
+	cszLoad.Empty();
+	m_cEditSysNm.GetWindowText(cszLoad);
+	if (cszLoad.IsEmpty() || m_bDefaultSystText)
+	{
+		if (m_nDeviceType == DEVICE_EPOWER)
+		{	// For ePowerHD version
+			m_cEditSysNm.SetWindowText(_T("ePowerHD"));
+		}
+		else if ((m_nDeviceType == DEVICE_EPOWER_CT) || (m_nDeviceType == DEVICE_PM10) || (m_nDeviceType == DEVICE_PM9S9))
+		{	// For ePower Manager CT version
+			m_cEditSysNm.SetWindowText(_T("ePower Manager"));
+		}
+
+		m_bDefaultSystText = TRUE;
+	}
+
+	cszLoad.Empty();
+	m_cEditHostNm.GetWindowText(cszLoad);
+	if (cszLoad.IsEmpty() || m_bDefaultHostText)
+	{
+		if (m_nDeviceType == DEVICE_EPOWER)
+		{	// For ePowerHD version
+			m_cEditHostNm.SetWindowText(_T("ePowerHD"));
+		}
+		else if ((m_nDeviceType == DEVICE_EPOWER_CT) || (m_nDeviceType == DEVICE_PM10) || (m_nDeviceType == DEVICE_PM9S9))
+		{	// For ePower Manager CT version
+			m_cEditHostNm.SetWindowText(_T("ePower Manager"));
+		}
+
+		m_bDefaultHostText = TRUE;
+	}
 }
 
 void CePower_MFGDlg::OnBnClickedButtonLoad()
 {
 	// TODO: Add your control notification handler code here
-	WriteCSVFile();
+	WriteCSVFile(TRUE);
 }
 
 CString CePower_MFGDlg::RemoveSplCharFrmBuffer(CString cszBuffer)
@@ -4353,6 +4676,8 @@ void CePower_MFGDlg::OnEnChangeEditHostNm()
 	cszValue.TrimLeft();
 	cszValue.TrimRight();
 
+	m_bDefaultHostText = FALSE;
+
 	if (CheckBufferWithSplChar(cszValue))
 	{
 		cszTemp.Empty();
@@ -4366,8 +4691,6 @@ void CePower_MFGDlg::OnEnChangeEditHostNm()
 		m_cEditHostNm.SetWindowText(cszValue);
 		m_cEditHostNm.SetSel(cszValue.GetLength(), cszValue.GetLength());
 	}
-
-
 }
 
 void CePower_MFGDlg::OnEnChangeEditMacAddr()
@@ -4481,4 +4804,14 @@ void CePower_MFGDlg::RefreshPDUList()
 		m_cButWrite.EnableWindow(FALSE);
 		SetDlgItemText(IDC_STATIC_PDU_DETECT, _T("No PDU device found"));
 	}
+}
+void CePower_MFGDlg::OnEnChangeEditSystemNm()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialog::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+	m_bDefaultSystText = FALSE;
 }

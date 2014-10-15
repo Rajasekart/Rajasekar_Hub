@@ -81,6 +81,11 @@ public:
 	CStringArray			m_cszVidValues;
 	PHASE_INFO				m_stPhaseInfo;
 
+	BOOL					m_bDefaultHostText;
+	BOOL					m_bDefaultSystText;
+	CStringArray			m_cszAllSerialNum;
+	CStringArray			m_cszAllMACAddrss;
+
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedGenerate();
 	afx_msg void OnCbnSelchangeModelNum();
@@ -88,7 +93,6 @@ public:
 	afx_msg void OnNMCustomdrawListLOutletNm(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMCustomdrawListROutletNm(NMHDR *pNMHDR, LRESULT *pResult);
 
-	BOOL WriteCSVFile();
 	CString GetYearNo();
 	void LoadSplChars();
 	void RefreshPDUList();
@@ -104,6 +108,7 @@ public:
 	void GenerateSubModelNum();
 	void ShowPopupDlg(BYTE byType);
 	CString GenerateSerialRandNum();
+	BOOL WriteCSVFile(BOOL bMessage);
 	BOOL PduEnumerateDevice(BOOL bWrLog);
 	BOOL CheckBufferWithSplChar(CString cszBuffer);
 	CString GetWeekNo(int year, int month, int day);
@@ -133,4 +138,6 @@ public:
 	CEdit m_cEditSysNm;
 	afx_msg void OnBnClickedBtnRefresh();
 	CButton m_cButWrite;
+	afx_msg void OnEnChangeEditSystemNm();
+	CButton m_cButGenerate;
 };

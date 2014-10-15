@@ -7,7 +7,7 @@ CFileCSV::CFileCSV(LPCTSTR lpszFilename, Mode mode)
   : CStdioFile(lpszFilename, (mode == modeRead) ?
     CFile::modeRead|CFile::shareDenyWrite|CFile::typeText   
     :
-    CFile::modeWrite|CFile::shareDenyWrite|CFile::modeCreate|CFile::typeText)
+    CFile::modeWrite|CFile::shareDenyWrite|CFile::modeCreate|CFile::modeNoTruncate|CFile::typeText)
 {
 
 #ifdef _DEBUG

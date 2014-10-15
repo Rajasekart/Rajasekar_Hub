@@ -5,6 +5,7 @@
 #define STR_PDU_LOG						_T("DEVICE_LOG")
 #define STR_LOG_FILE_NM					_T("DEVICE_LOG.INI")
 #define STR_CSV_FILE_NM					_T("DEVICE_DATA.csv")
+#define STR_PRG_FILENM					_T("programmed_devices.csv")
 #define STR_DEVICE_DETECT				_T("DEVICE_DETECTION")
 #define STR_DEVICE_HANDLE				_T("DEVICE_HANDLE")
 #define STR_DEVICE_PATH					_T("DEVICE_PATH")
