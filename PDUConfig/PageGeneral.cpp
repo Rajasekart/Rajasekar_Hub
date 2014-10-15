@@ -28,6 +28,9 @@ void CPageGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_GEN_SYS_CONTACT, m_cEditGenSysCont);
 	DDX_Control(pDX, IDC_EDIT_GEN_STAGGER_ON_DELAY, m_cEditGenStaggerOnDelay);
 	DDX_Control(pDX, IDC_EDIT_GEN_STAGGER_OFF_DELAY, m_cEditGenStaggerOffDelay);
+	DDX_Control(pDX, IDC_CHECK_ENB_TELNET_CONN, m_cCheckEnbTelnet);
+	DDX_Control(pDX, IDC_CHECK_ENB_HTTP_CONN, m_cCheckEnbHTTP);
+	DDX_Control(pDX, IDC_CHECK_ENB_HTTPS_CONN, m_cCheckEnbHTTPS);
 }
 
 

@@ -74,6 +74,7 @@ CPDUConfigDlg::CPDUConfigDlg(CWnd* pParent /*=NULL*/)
 	m_pPageGeneral = NULL;
 	m_pPagePDU = NULL;
 	m_pPageAlert = NULL;
+	m_pPageSNMPVer = NULL;
 
 	m_nComboSel = -1;
 	m_nFrontPage = 0;
@@ -131,6 +132,13 @@ CPDUConfigDlg::~CPDUConfigDlg()
 		m_pPageAlert->DestroyWindow();
 		delete m_pPageAlert;
 		m_pPageAlert = NULL;
+	}
+
+	if (m_pPageSNMPVer)
+	{
+		m_pPageSNMPVer->DestroyWindow();
+		delete m_pPageSNMPVer;
+		m_pPageSNMPVer = NULL;
 	}
 }
 
@@ -192,6 +200,7 @@ BOOL CPDUConfigDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	InitiateTimeZoneValues();
 
 	cszCurrPath.Empty();
 	GetModuleFileName(NULL, szCurrPath, sizeof(szCurrPath));
@@ -214,18 +223,20 @@ BOOL CPDUConfigDlg::OnInitDialog()
 
 	m_pPageNetwork = new CPageNetwork(this);
 	m_pPageSNMP = new CPageSNMP(this);
+	m_pPageSNMPVer = new CDlgSNMPVer(this);
 	m_pPageEmail = new CPageEmail(this);
 	m_pPageGeneral = new CPageGeneral(this);
 	m_pPagePDU = new CPagePDU(this);
 	m_pPageAlert =  new CPageAlert(this);
-
+	
 	m_pPageNetwork->Create(IDD_DLG_NETWORK, &m_cTabConfig);
 	m_pPageSNMP->Create(IDD_DLG_SNMP, &m_cTabConfig);
+	m_pPageSNMPVer->Create(IDD_DLG_SNMP_VER, &m_cTabConfig); 
 	m_pPageEmail->Create(IDD_DLG_EMAIL, &m_cTabConfig);
 	m_pPageGeneral->Create(IDD_DLG_GENERAL, &m_cTabConfig);
 	m_pPagePDU->Create(IDD_DLG_PDU, &m_cTabConfig);
 	m_pPageAlert->Create(IDD_DLG_ALERT, &m_cTabConfig);
-
+	
 	tcItem.mask = TCIF_TEXT;
 	tcItem.iImage = -1;
 
@@ -240,6 +251,12 @@ BOOL CPDUConfigDlg::OnInitDialog()
 	tcItem.pszText = cszLoad.GetBuffer(cszLoad.GetLength());
 	cszLoad.ReleaseBuffer();
 	m_cTabConfig.InsertItem(ID_PAGE_SNMP, &tcItem);
+
+	cszLoad.Empty();
+	cszLoad.LoadString(IDS_STR_SNMP_SETTINGS);
+	tcItem.pszText = cszLoad.GetBuffer(cszLoad.GetLength());
+	cszLoad.ReleaseBuffer();
+	m_cTabConfig.InsertItem(ID_PAGE_SNMP_VERSION, &tcItem);
 
 	cszLoad.Empty();
 	cszLoad.LoadString(IDS_STR_EMAIL_SETTING_TITLE);
@@ -374,6 +391,13 @@ void CPDUConfigDlg::OnConfigTabChanged(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 		break;
 
+		case ID_PAGE_SNMP_VERSION:
+		{
+			m_pPageSNMPVer->SetWindowPos(NULL, rc.left, rc.bottom + 1, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+			m_pPageSNMPVer->SetFocus();
+		}
+		break;
+
 		case ID_PAGE_EMAIL:
 		{
 			m_pPageEmail->SetWindowPos(NULL, rc.left, rc.bottom + 1, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
@@ -423,6 +447,12 @@ void CPDUConfigDlg::OnConfigTabChanging(NMHDR *pNMHDR, LRESULT *pResult)
 		case ID_PAGE_SNMP:
 		{
 			m_pPageSNMP->ShowWindow(SW_HIDE);
+		}
+		break;
+
+		case ID_PAGE_SNMP_VERSION:
+		{
+			m_pPageSNMPVer->ShowWindow(SW_HIDE);
 		}
 		break;
 
@@ -1006,6 +1036,12 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 		float	fValue;
 	}IEE_CONV;
 
+	typedef union 
+	{
+		BYTE	byValue[4];
+		float	fAnswer;
+	}Float_Conv;
+
 	BOOL				bRet = TRUE;
 	UINT				nNum = 0;
 	BYTE				byErrCode = 0;
@@ -1013,6 +1049,9 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 	CString				cszPDUAddress;
 	CString				cszLoad;
 	IEE_CONV			stIeeConv = {0};
+	Float_Conv			stFloatConv = {0};
+	NTP_SETTINGS_INFO	stNtpSettings = {0};
+	SNMPV3_SETTINGS		stSNMP_V3_Settings = {0};
 
 	cszPDUAddress.Empty();
 
@@ -1093,6 +1132,21 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 	cszPDUAddress.ReleaseBuffer();
 	memcpy(m_stPDUConfigInfo.bySNMPWriteCmn, byDataBuffer, sizeof(m_stPDUConfigInfo.bySNMPWriteCmn));
 
+	memset(byDataBuffer, 0, sizeof(byDataBuffer));
+	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_V3_SETTINGS, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
+	cszPDUAddress.ReleaseBuffer();
+	memcpy(&stSNMP_V3_Settings, byDataBuffer, sizeof(SNMPV3_SETTINGS));
+	m_stPDUConfigInfo.bySNMPV3_Enabled = stSNMP_V3_Settings.byEnabled;
+	m_stPDUConfigInfo.byAuthLevel = stSNMP_V3_Settings.byAuthLevel;
+	memcpy(&m_stPDUConfigInfo.bySNMPV3_UserName, stSNMP_V3_Settings.byUserName, sizeof(stSNMP_V3_Settings.byUserName));
+	memcpy(&m_stPDUConfigInfo.byAuthPassword, stSNMP_V3_Settings.byAuthPassword, sizeof(stSNMP_V3_Settings.byAuthPassword));
+	m_stPDUConfigInfo.byAuthHashType = stSNMP_V3_Settings.byAuthHashType;
+	memcpy(&m_stPDUConfigInfo.byPrivPassword, stSNMP_V3_Settings.byPrivPassword, sizeof(stSNMP_V3_Settings.byPrivPassword));
+	m_stPDUConfigInfo.byPrivType = stSNMP_V3_Settings.byPrivType;
+
+
+	// ------------------------ OTHER SETTINGS ---------------------------------------------------------------------------------------------
+
 	// ************** READ SNMP TRAP ENABLE STATUS **************
 	memset(byDataBuffer, 0, sizeof(byDataBuffer));
 	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_ENB_SNMP_TRAP, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
@@ -1113,6 +1167,29 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_RECEVR_PORT_NUM, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
 	cszPDUAddress.ReleaseBuffer();
 	m_stPDUConfigInfo.bySNMPTrapPortNum = byDataBuffer[0];
+
+	////////// NTP SETTINGS
+	memset(byDataBuffer, 0, sizeof(byDataBuffer));
+	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NTP_SETTINGS, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
+	cszPDUAddress.ReleaseBuffer();
+	//memcpy(&stNtpSettings, byDataBuffer, sizeof(NTP_SETTINGS_INFO));
+	stNtpSettings.bEnabled = byDataBuffer[0];
+	stFloatConv.byValue[0] = byDataBuffer[1];
+	stFloatConv.byValue[1] = byDataBuffer[2];
+	stFloatConv.byValue[2] = byDataBuffer[3];
+	stFloatConv.byValue[3] = byDataBuffer[4];
+	stNtpSettings.fNtpZone = stFloatConv.fAnswer;
+	m_stPDUConfigInfo.bNtpEnabled = stNtpSettings.bEnabled;
+	m_stPDUConfigInfo.fNtpZone = stNtpSettings.fNtpZone;
+
+	/*if (!m_stPDUConfigInfo.bNtpEnabled)
+	{*/
+		// NEED TO READ THE DATE AND TIME TO SET IT MANUALLY
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NTP_DATE_TIME, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+		memcpy(m_stPDUConfigInfo.byTimeZoneDateTime, byDataBuffer, sizeof(m_stPDUConfigInfo.byTimeZoneDateTime));
+	/*}*/
 
 
 	// ------------------------ EMAIL SETTINGS --------------------------------------------------------------------------------------------
@@ -1195,6 +1272,19 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 	cszLoad.Format(_T("%02x%02x%02x%02x"), byDataBuffer[0], byDataBuffer[1], byDataBuffer[2], byDataBuffer[3]);
 	m_stPDUConfigInfo.dwStaggerOffDelay = strtoul(cszLoad.GetBuffer(cszLoad.GetLength()), NULL, 16);
 	cszLoad.ReleaseBuffer();
+
+	//	typedef struct
+	//{
+	//	BYTE	bTelnetEnabled;
+	//	BYTE	bHTTPEnabled;
+	//	BYTE	bHTTPSEnabled;
+	//}NET_SETTINGS;
+	memset(byDataBuffer, 0, sizeof(byDataBuffer));
+	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NET_SETTINGS, byDataBuffer, 0, FALSE, &byErrCode, TRUE);
+	cszPDUAddress.ReleaseBuffer();
+	m_stPDUConfigInfo.byTelnetEnabled = byDataBuffer[0];
+	m_stPDUConfigInfo.byHTTPEnabled = byDataBuffer[1];
+	m_stPDUConfigInfo.byHTTPSEnabled = byDataBuffer[2];
 
 	// ------------------------ PDU OUTLET SETTINGS ---------------------------------------------------------------------------------------
 	memset(byDataBuffer, 0, sizeof(byDataBuffer));
@@ -1299,6 +1389,7 @@ BOOL CPDUConfigDlg::ReadPDUSettingsInfo(UINT nPDUNum)
 BOOL CPDUConfigDlg::UpdateInfoInAllPages(UINT nPageNum)
 {
 	BOOL			bRet = TRUE;
+	int				nPos = 0;
 	UINT			nNum = 0;
 	CString			cszLoad;
 
@@ -1325,19 +1416,9 @@ BOOL CPDUConfigDlg::UpdateInfoInAllPages(UINT nPageNum)
 		m_pPageNetwork->m_cSecDNS.SetAddress(m_stPDUConfigInfo.bySDNSField[0], m_stPDUConfigInfo.bySDNSField[1], m_stPDUConfigInfo.bySDNSField[2], m_stPDUConfigInfo.bySDNSField[3]);
 	}
 
-	// ********** UPDATE SNMP PAGE ******************
+	// ********** UPDATE OTHER SETTINGS PAGE ******************
 	if (m_pPageSNMP)
 	{
-		// Read Community
-		cszLoad.Empty();
-		cszLoad.Format(_T("%s"), m_stPDUConfigInfo.bySNMPReadCmn);
-		m_pPageSNMP->m_cEditReadCmnty.SetWindowText(cszLoad);
-
-		// Write Community
-		cszLoad.Empty();
-		cszLoad.Format(_T("%s"), m_stPDUConfigInfo.bySNMPWriteCmn);
-		m_pPageSNMP->m_cWriteCmnty.SetWindowText(cszLoad);
-
 		// Enable SNMP Trap
 		m_pPageSNMP->m_cChkSNMPTrap.SetCheck(m_stPDUConfigInfo.byEnbSNMPTrap);
 		m_pPageSNMP->OnBnClickedCheckSnmpTrap();
@@ -1347,6 +1428,59 @@ BOOL CPDUConfigDlg::UpdateInfoInAllPages(UINT nPageNum)
 
 		// SNMP Trap Port Number
 		m_pPageSNMP->SetDlgItemInt(IDC_EDIT_SNMP_TRAP_PORT, m_stPDUConfigInfo.bySNMPTrapPortNum);
+
+		if (m_stPDUConfigInfo.bNtpEnabled)
+		{
+			m_pPageSNMP->m_cBtnEnbNTPDateTime.SetCheck(BST_CHECKED);
+			m_pPageSNMP->OnBnClickedCheckEnbNtpDtTm();
+			nPos = GetTimeZonePos(m_stPDUConfigInfo.fNtpZone);
+			if (nPos == -1)
+			{
+				nPos = 0;
+			}
+			m_pPageSNMP->m_cComboTimeZone.SetCurSel(nPos);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("%s"), m_stPDUConfigInfo.byTimeZoneDateTime);
+			m_pPageSNMP->CopyDateTime(cszLoad);
+		}
+		else
+		{
+			m_pPageSNMP->m_cBtnEnbNTPDateTime.SetCheck(BST_UNCHECKED);
+			m_pPageSNMP->OnBnClickedCheckEnbNtpDtTm();
+			cszLoad.Empty();
+			cszLoad.Format(_T("%s"), m_stPDUConfigInfo.byTimeZoneDateTime);
+			m_pPageSNMP->CopyDateTime(cszLoad);
+		}
+	}
+
+	// ********** SNMP SETTINGS PAGE ******************
+	if (m_pPageSNMPVer)
+	{
+		// Read Community
+		cszLoad.Empty();
+		cszLoad.Format(_T("%s"), m_stPDUConfigInfo.bySNMPReadCmn);
+		m_pPageSNMPVer->m_cEditV3ReadComm.SetWindowText(cszLoad);
+
+		// Write Community
+		cszLoad.Empty();
+		cszLoad.Format(_T("%s"), m_stPDUConfigInfo.bySNMPWriteCmn);
+		m_pPageSNMPVer->m_cEditV3WriteComm.SetWindowText(cszLoad);
+
+		if (m_stPDUConfigInfo.bySNMPV3_Enabled)
+		{
+			cszLoad.Empty();
+			cszLoad.Format(_T("%s"), m_stPDUConfigInfo.bySNMPV3_UserName);
+			m_pPageSNMPVer->m_cEditSNMPV3User.SetWindowText(cszLoad);
+
+			m_pPageSNMPVer->m_cComboAuthLevel.SetCurSel(0);
+
+			m_pPageSNMPVer->SelectControl(1);
+		}
+		else
+		{
+			m_pPageSNMPVer->SelectControl(0);
+		}
 	}
 
 	// ********** UPDATE EMAIL PAGE ******************
@@ -1405,6 +1539,33 @@ BOOL CPDUConfigDlg::UpdateInfoInAllPages(UINT nPageNum)
 
 		// Stagger Off Delay
 		m_pPageGeneral->SetDlgItemInt(IDC_EDIT_GEN_STAGGER_OFF_DELAY, m_stPDUConfigInfo.dwStaggerOffDelay);
+
+		if (m_stPDUConfigInfo.byTelnetEnabled)
+		{
+			m_pPageGeneral->m_cCheckEnbTelnet.SetCheck(BST_CHECKED);
+		}
+		else
+		{
+			m_pPageGeneral->m_cCheckEnbTelnet.SetCheck(BST_UNCHECKED);
+		}
+
+		if (m_stPDUConfigInfo.byHTTPEnabled)
+		{
+			m_pPageGeneral->m_cCheckEnbHTTP.SetCheck(BST_CHECKED);
+		}
+		else
+		{
+			m_pPageGeneral->m_cCheckEnbHTTP.SetCheck(BST_UNCHECKED);
+		}
+
+		if (m_stPDUConfigInfo.byHTTPSEnabled)
+		{
+			m_pPageGeneral->m_cCheckEnbHTTPS.SetCheck(BST_CHECKED);
+		}
+		else
+		{
+			m_pPageGeneral->m_cCheckEnbHTTPS.SetCheck(BST_UNCHECKED);
+		}
 	}
 
 	// ********** UPDATE OUTLET PAGE ******************
@@ -1580,6 +1741,101 @@ void CPDUConfigDlg::OnBnClickedOk()
 				AfxMessageBox(cszLoad, MB_ICONSTOP);
 
 				m_pPageSNMP->m_cReceIPAddr.SetFocus();
+				return;
+			}
+		}
+	}
+
+	if (m_pPageSNMPVer)
+	{
+		CString			cszConfPass;
+
+		if (m_pPageSNMPVer->m_cComboAuthLevel.GetCurSel() == 1)
+		{
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditAuthPassKey.GetWindowText(cszLoad);
+			if (cszLoad.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Authentication Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditAuthPassKey.SetFocus();
+				return;
+			}
+
+			cszConfPass.Empty();
+			m_pPageSNMPVer->m_cEditConfAuthPassKey.GetWindowText(cszConfPass);
+			if (cszConfPass.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Confirm Authentication Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditConfAuthPassKey.SetFocus();
+				return;
+			}
+
+			if (cszConfPass.Compare(cszLoad))
+			{
+				AfxMessageBox(_T("Authentication Passwords you typed do not match. Please retype the password in both boxes."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditAuthPassKey.SetFocus();
+				return;
+			}
+		}
+		else if (m_pPageSNMPVer->m_cComboAuthLevel.GetCurSel() == 2)
+		{
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditAuthPassKey.GetWindowText(cszLoad);
+			if (cszLoad.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Authentication Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditAuthPassKey.SetFocus();
+				return;
+			}
+
+			cszConfPass.Empty();
+			m_pPageSNMPVer->m_cEditConfAuthPassKey.GetWindowText(cszConfPass);
+			if (cszConfPass.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Confirm Authentication Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditConfAuthPassKey.SetFocus();
+				return;
+			}
+
+			if (cszConfPass.Compare(cszLoad))
+			{
+				AfxMessageBox(_T("Authentication Passwords you typed do not match. Please retype the password in both boxes."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditAuthPassKey.SetFocus();
+				return;
+			}
+
+
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditPrivPassKey.GetWindowText(cszLoad);
+			if (cszLoad.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Privacy Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditPrivPassKey.SetFocus();
+				return;
+			}
+
+			cszConfPass.Empty();
+			m_pPageSNMPVer->m_cEditPrivConfPasskey.GetWindowText(cszConfPass);
+			if (cszConfPass.GetLength() < 4)
+			{
+				AfxMessageBox(_T("Confirm Privacy Password should not be empty or less than 4."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditPrivConfPasskey.SetFocus();
+				return;
+			}
+
+			if (cszConfPass.Compare(cszLoad))
+			{
+				AfxMessageBox(_T("Privacy Passwords you typed do not match. Please retype the password in both boxes."), MB_ICONSTOP);
+
+				m_pPageSNMPVer->m_cEditPrivPassKey.SetFocus();
 				return;
 			}
 		}
@@ -1770,19 +2026,9 @@ void CPDUConfigDlg::OnBnClickedOk()
 		m_pPageNetwork->m_cSecDNS.GetAddress(m_stPDUConfigInfo.bySDNSField[0], m_stPDUConfigInfo.bySDNSField[1], m_stPDUConfigInfo.bySDNSField[2], m_stPDUConfigInfo.bySDNSField[3]);
 	}
 
-	// ********** GATHER DATA FRM SNMP PAGE ******************
+	// ********** GATHER DATA FRM OTHER SETTINGS PAGE ******************
 	if (m_pPageSNMP)
 	{
-		// Read Community
-		cszLoad.Empty();
-		m_pPageSNMP->m_cEditReadCmnty.GetWindowText(cszLoad);
-		wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPReadCmn, _T("%s"), cszLoad);
-
-		// Write Community
-		cszLoad.Empty();
-		m_pPageSNMP->m_cWriteCmnty.GetWindowText(cszLoad);
-		wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPWriteCmn, _T("%s"), cszLoad);
-
 		// SNMP TRAP STATUS
 		m_stPDUConfigInfo.byEnbSNMPTrap = 0;
 		if (m_pPageSNMP->m_cChkSNMPTrap.GetCheck() == BST_CHECKED)
@@ -1795,6 +2041,80 @@ void CPDUConfigDlg::OnBnClickedOk()
 
 		// SNMP Trap Port Number
 		m_stPDUConfigInfo.bySNMPTrapPortNum = m_pPageSNMP->GetDlgItemInt(IDC_EDIT_SNMP_TRAP_PORT);
+
+		m_stPDUConfigInfo.bNtpEnabled = 0;
+		if (m_pPageSNMP->m_cBtnEnbNTPDateTime.GetCheck() == BST_CHECKED)
+		{
+			m_stPDUConfigInfo.bNtpEnabled = 1;
+		
+			if (-1 != m_pPageSNMP->m_cComboTimeZone.GetCurSel())
+			{
+				m_stPDUConfigInfo.fNtpZone = m_fTimeZones[m_pPageSNMP->m_cComboTimeZone.GetCurSel()];
+			}
+		}
+		else
+		{
+			COleDateTime			cDateTool;
+			COleDateTime			cTimeTool;
+			CString					cszTool;
+				
+			m_pPageSNMP->m_ctrlDateHired->GetTime(cDateTool);
+			m_pPageSNMP->m_ctrlTimeHired->GetTime(cTimeTool);
+
+			cszTool.Empty();
+			cszTool.Format(_T("%2d-%2d-%4d %2d:%2d"), cDateTool.GetMonth(), cDateTool.GetDay(), cDateTool.GetYear(), cTimeTool.GetHour(), cTimeTool.GetMinute());
+			wsprintf((LPSTR)m_stPDUConfigInfo.byTimeZoneDateTime, _T("%s"), cszTool);
+		}
+	}
+
+	if (m_pPageSNMPVer)
+	{
+		if (!m_pPageSNMPVer->GetV3CheckStatus())
+		{
+			m_stPDUConfigInfo.bySNMPV3_Enabled = 0;
+
+			m_stPDUConfigInfo.byAuthLevel = 0;
+
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditSNMPV3User.GetWindowText(cszLoad);
+			wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPV3_UserName, _T("%s"), cszLoad);
+
+			// Read Community
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditV3ReadComm.GetWindowText(cszLoad);
+			wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPReadCmn, _T("%s"), cszLoad);
+
+			// Write Community
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditV3WriteComm.GetWindowText(cszLoad);
+			wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPWriteCmn, _T("%s"), cszLoad);
+		}
+		else
+		{
+			m_stPDUConfigInfo.bySNMPV3_Enabled = 1;
+
+			m_stPDUConfigInfo.byAuthLevel = m_pPageSNMPVer->m_cComboAuthLevel.GetCurSel();
+			cszLoad.Empty();
+			m_pPageSNMPVer->m_cEditSNMPV3User.GetWindowText(cszLoad);
+			wsprintf((LPSTR)m_stPDUConfigInfo.bySNMPV3_UserName, _T("%s"), cszLoad);
+
+			if (m_stPDUConfigInfo.byAuthLevel == 1)
+			{
+				cszLoad.Empty();
+				m_pPageSNMPVer->m_cEditAuthPassKey.GetWindowText(cszLoad);
+				wsprintf((LPSTR)m_stPDUConfigInfo.byAuthPassword, _T("%s"), cszLoad);
+			}
+			else if (m_stPDUConfigInfo.byAuthLevel == 2)
+			{
+				cszLoad.Empty();
+				m_pPageSNMPVer->m_cEditAuthPassKey.GetWindowText(cszLoad);
+				wsprintf((LPSTR)m_stPDUConfigInfo.byAuthPassword, _T("%s"), cszLoad);
+
+				cszLoad.Empty();
+				m_pPageSNMPVer->m_cEditPrivPassKey.GetWindowText(cszLoad);
+				wsprintf((LPSTR)m_stPDUConfigInfo.byPrivPassword, _T("%s"), cszLoad);
+			}
+		}
 	}
 
 	// ********** GATHER DATA FRM EMAIL PAGE ******************
@@ -1856,6 +2176,25 @@ void CPDUConfigDlg::OnBnClickedOk()
 
 		// Stagger Off Delay
 		m_stPDUConfigInfo.dwStaggerOffDelay = m_pPageGeneral->GetDlgItemInt(IDC_EDIT_GEN_STAGGER_OFF_DELAY);
+
+		m_stPDUConfigInfo.byTelnetEnabled = 0;
+		if (m_pPageGeneral->m_cCheckEnbTelnet.GetCheck() == BST_CHECKED)
+		{
+			m_stPDUConfigInfo.byTelnetEnabled = 1;
+		}
+
+		m_stPDUConfigInfo.byHTTPEnabled = 0;
+		if (m_pPageGeneral->m_cCheckEnbHTTP.GetCheck() == BST_CHECKED)
+		{
+			m_stPDUConfigInfo.byHTTPEnabled = 1;
+		}
+
+		m_stPDUConfigInfo.byHTTPSEnabled = 0;
+		if (m_pPageGeneral->m_cCheckEnbHTTPS.GetCheck() == BST_CHECKED)
+		{
+			m_stPDUConfigInfo.byHTTPSEnabled = 1;
+		}
+
 	}
 
 	// ********** GATHER DATA FRM OUTLET PAGE ******************
@@ -1912,6 +2251,12 @@ BOOL CPDUConfigDlg::WriteConfigData()
 		float	fValue;
 	}IEE_CONV;
 
+	typedef union 
+	{
+		BYTE	byValue[4];
+		float	fAnswer;
+	}Float_Conv;
+
 	BOOL				bRet = TRUE;
 	BYTE				byErrCode = 0;
 	BYTE				byInfoSize = 0;
@@ -1920,7 +2265,10 @@ BOOL CPDUConfigDlg::WriteConfigData()
 	CString				cszPDUAddress;
 	CString				cszLoad;
 	IEE_CONV			stIeeConv = {0};
+	Float_Conv			stFloatConv = {0};
 	DWORD				dwValue = 0;
+	SNMPV3_SETTINGS		stSNMP_V3_Settings = {0};
+	NTP_SETTINGS_INFO	stNTP_Settings = {0};
 
 	ShowPopupDlg(DLG_POPUP_CREATE);
 
@@ -2008,21 +2356,66 @@ BOOL CPDUConfigDlg::WriteConfigData()
 
 	// ------------------------ SNMP SETTINGS ---------------------------------------------------------------------------------------------
 
-	// ************** READ COMMUNITY **************
-	memset(byDataBuffer, 0, sizeof(byDataBuffer));
-	memcpy(byDataBuffer, m_stPDUConfigInfo.bySNMPReadCmn, sizeof(m_stPDUConfigInfo.bySNMPReadCmn));
-	byInfoSize = sizeof(m_stPDUConfigInfo.bySNMPReadCmn);
+	if (!m_stPDUConfigInfo.bySNMPV3_Enabled)
+	{
+		// ************** READ COMMUNITY **************
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		memcpy(byDataBuffer, m_stPDUConfigInfo.bySNMPReadCmn, sizeof(m_stPDUConfigInfo.bySNMPReadCmn));
+		byInfoSize = sizeof(m_stPDUConfigInfo.bySNMPReadCmn);
 
-	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_READ_COMMUNITY, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
-	cszPDUAddress.ReleaseBuffer();
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_READ_COMMUNITY, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
 
-	// ************** WRITE COMMUNITY **************
-	memset(byDataBuffer, 0, sizeof(byDataBuffer));
-	memcpy(byDataBuffer, m_stPDUConfigInfo.bySNMPWriteCmn, sizeof(m_stPDUConfigInfo.bySNMPWriteCmn));
-	byInfoSize = sizeof(m_stPDUConfigInfo.bySNMPWriteCmn);
+		// ************** WRITE COMMUNITY **************
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		memcpy(byDataBuffer, m_stPDUConfigInfo.bySNMPWriteCmn, sizeof(m_stPDUConfigInfo.bySNMPWriteCmn));
+		byInfoSize = sizeof(m_stPDUConfigInfo.bySNMPWriteCmn);
 
-	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_WRITE_COMMUNITY, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
-	cszPDUAddress.ReleaseBuffer();
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_WRITE_COMMUNITY, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+
+		// ************** DISABLE SNMP V3 **************
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		memset(&stSNMP_V3_Settings, 0, sizeof(SNMPV3_SETTINGS));
+		stSNMP_V3_Settings.byEnabled = 0;
+		stSNMP_V3_Settings.byAuthLevel = 0;
+		memcpy(stSNMP_V3_Settings.byUserName, m_stPDUConfigInfo.bySNMPV3_UserName, sizeof(m_stPDUConfigInfo.bySNMPV3_UserName));
+		stSNMP_V3_Settings.byAuthHashType = m_stPDUConfigInfo.byAuthHashType;
+		stSNMP_V3_Settings.byPrivType = m_stPDUConfigInfo.byPrivType;
+
+		memcpy(byDataBuffer, &stSNMP_V3_Settings, sizeof(SNMPV3_SETTINGS));
+		byInfoSize = sizeof(SNMPV3_SETTINGS);
+
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_V3_SETTINGS, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+	}
+	else
+	{
+		// ************** ENABLE SNMP V3 **************
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		memset(&stSNMP_V3_Settings, 0, sizeof(SNMPV3_SETTINGS));
+		stSNMP_V3_Settings.byEnabled = 1;
+		stSNMP_V3_Settings.byAuthLevel = m_stPDUConfigInfo.byAuthLevel;
+		memcpy(stSNMP_V3_Settings.byUserName, m_stPDUConfigInfo.bySNMPV3_UserName, sizeof(m_stPDUConfigInfo.bySNMPV3_UserName));
+		stSNMP_V3_Settings.byAuthHashType = m_stPDUConfigInfo.byAuthHashType;
+		stSNMP_V3_Settings.byPrivType = m_stPDUConfigInfo.byPrivType;
+
+		if (m_stPDUConfigInfo.byAuthLevel == 1)
+		{
+			memcpy(stSNMP_V3_Settings.byAuthPassword, m_stPDUConfigInfo.byAuthPassword, sizeof(m_stPDUConfigInfo.byAuthPassword));
+		}
+		else if (m_stPDUConfigInfo.byAuthLevel == 2)
+		{
+			memcpy(stSNMP_V3_Settings.byAuthPassword, m_stPDUConfigInfo.byAuthPassword, sizeof(m_stPDUConfigInfo.byAuthPassword));
+			memcpy(stSNMP_V3_Settings.byPrivPassword, m_stPDUConfigInfo.byPrivPassword, sizeof(m_stPDUConfigInfo.byPrivPassword));
+		}
+
+		memcpy(byDataBuffer, &stSNMP_V3_Settings, sizeof(SNMPV3_SETTINGS));
+		byInfoSize = sizeof(SNMPV3_SETTINGS);
+
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_V3_SETTINGS, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+	}
 
 	// ************** SNMP TRAP ENBABLE STATUS **************
 	memset(byDataBuffer, 0, sizeof(byDataBuffer));
@@ -2053,6 +2446,47 @@ BOOL CPDUConfigDlg::WriteConfigData()
 
 	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_SNMP_RECEVR_PORT_NUM, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
 	cszPDUAddress.ReleaseBuffer();
+
+	// ************** NTP  **************
+	memset(byDataBuffer, 0, sizeof(byDataBuffer));
+	memset(&stNTP_Settings, 0, sizeof(NTP_SETTINGS_INFO));
+
+	if (m_stPDUConfigInfo.bNtpEnabled)
+	{
+		// ************** ENABLE TIME ZONE SETTINGS **************
+		stFloatConv.fAnswer = m_stPDUConfigInfo.fNtpZone;
+		byDataBuffer[0] = m_stPDUConfigInfo.bNtpEnabled;
+		byDataBuffer[1] = stFloatConv.byValue[0];
+		byDataBuffer[2] = stFloatConv.byValue[1];
+		byDataBuffer[3] = stFloatConv.byValue[2];
+		byDataBuffer[4] = stFloatConv.byValue[3];
+		byInfoSize = 5;
+
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NTP_SETTINGS, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+	}
+	else
+	{
+		// ************** DISABLE TIME ZONE SETTINGS **************
+		stFloatConv.fAnswer = 0.0;
+		byDataBuffer[0] = m_stPDUConfigInfo.bNtpEnabled;
+		byDataBuffer[1] = stFloatConv.byValue[0];
+		byDataBuffer[2] = stFloatConv.byValue[1];
+		byDataBuffer[3] = stFloatConv.byValue[2];
+		byDataBuffer[4] = stFloatConv.byValue[3];
+		byInfoSize = 5;
+		
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NTP_SETTINGS, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+
+		// ************** MANUAL DATE AND TIME SETTINGS **************
+		memset(byDataBuffer, 0, sizeof(byDataBuffer));
+		memcpy(byDataBuffer, m_stPDUConfigInfo.byTimeZoneDateTime, sizeof(m_stPDUConfigInfo.byTimeZoneDateTime));
+		byInfoSize = sizeof(m_stPDUConfigInfo.byTimeZoneDateTime);
+
+		PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NTP_DATE_TIME, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+		cszPDUAddress.ReleaseBuffer();
+	}
 
 	ShowPopupDlg(DLG_POPUP_REFRESH);
 
@@ -2155,6 +2589,15 @@ BOOL CPDUConfigDlg::WriteConfigData()
 	byInfoSize = 4;
 
 	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_STAGGER_OFF_DELAY, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
+	cszPDUAddress.ReleaseBuffer();
+
+	memset(byDataBuffer, 0, sizeof(byDataBuffer));
+	byDataBuffer[0] = m_stPDUConfigInfo.byTelnetEnabled;
+	byDataBuffer[1] = m_stPDUConfigInfo.byHTTPEnabled;
+	byDataBuffer[2] = m_stPDUConfigInfo.byHTTPSEnabled;
+	byInfoSize = 3;
+
+	PduStaticInfoWriteAndRead(cszPDUAddress.GetBuffer(cszPDUAddress.GetLength()), PDU_NET_SETTINGS, byDataBuffer, byInfoSize, TRUE, &byErrCode, TRUE);
 	cszPDUAddress.ReleaseBuffer();
 
 	ShowPopupDlg(DLG_POPUP_REFRESH);
@@ -2393,19 +2836,22 @@ void CPDUConfigDlg::OnBnClickedClearAll()
 		m_pPageNetwork->m_cSecDNS.SetAddress(0);
 	}
 
-	// ********** SNMP PAGE ******************
+	// ********** OTHER Settings PAGE ******************
 	if (m_pPageSNMP)
 	{
-		m_pPageSNMP->m_cEditReadCmnty.SetWindowText(_T(""));
-		
-		m_pPageSNMP->m_cWriteCmnty.SetWindowText(_T(""));
-
 		m_pPageSNMP->m_cChkSNMPTrap.SetCheck(BST_UNCHECKED);
 		m_pPageSNMP->OnBnClickedCheckSnmpTrap();
 
 		m_pPageSNMP->m_cReceIPAddr.SetAddress(0);
 
 		m_pPageSNMP->SetDlgItemText(IDC_EDIT_SNMP_TRAP_PORT, _T(""));
+	}
+
+	// ********** SNMP Settings PAGE ******************
+	if (m_pPageSNMPVer)
+	{
+		m_pPageSNMPVer->m_cEditV3ReadComm.SetWindowText(_T(""));
+		m_pPageSNMPVer->m_cEditV3WriteComm.SetWindowText(_T(""));
 	}
 
 	// ********** CLEAR ALL IN EMAIL PAGE ******************
@@ -2569,5 +3015,66 @@ void CPDUConfigDlg::ShowPopupDlg(BYTE byType)
 			delete m_cPopUpWnd;
 			m_cPopUpWnd = NULL;
 		}
+	}
+}
+
+void CPDUConfigDlg::InitiateTimeZoneValues()
+{
+	m_fTimeZones[0] = -12.0;
+	m_fTimeZones[1] = -11.0;
+	m_fTimeZones[2] = -10.0;
+	m_fTimeZones[3] = -9.0;
+	m_fTimeZones[4] = -8.0;
+	m_fTimeZones[5] = -7.0;
+	m_fTimeZones[6] = -6.0;
+	m_fTimeZones[7] = -5.0;
+	m_fTimeZones[8] = -4.0;
+	m_fTimeZones[9] = -3.5;
+	m_fTimeZones[10] = -3.0;
+	m_fTimeZones[11] = -2.0;
+	m_fTimeZones[12] = -1.0;
+	m_fTimeZones[13] = 0.0;
+	m_fTimeZones[14] = 1.0;
+	m_fTimeZones[15] = 2.0;
+	m_fTimeZones[16] = 3.0;
+	m_fTimeZones[17] = 3.5;
+	m_fTimeZones[18] = 4.0;
+	m_fTimeZones[19] = 4.5;
+	m_fTimeZones[20] = 5.0;
+	m_fTimeZones[21] = 5.5;
+	m_fTimeZones[22] = 5.75;
+	m_fTimeZones[23] = 6.0;
+	m_fTimeZones[24] = 7.0;
+	m_fTimeZones[25] = 8.0;
+	m_fTimeZones[26] = 9.0;
+	m_fTimeZones[27] = 9.5;
+	m_fTimeZones[28] = 10.0;
+	m_fTimeZones[29] = 11.0;
+	m_fTimeZones[30] = 12.0;
+	m_fTimeZones[31] = 13.0;
+	m_fTimeZones[32] = 14.0;
+}
+
+int CPDUConfigDlg::GetTimeZonePos(float fValue)
+{
+	BOOL	bFound = FALSE;
+	int		nNum = 0;
+
+	for (nNum = 0; nNum < 33; nNum++)
+	{
+		if (m_fTimeZones[nNum] == fValue)
+		{
+			bFound = TRUE;
+			break;
+		}
+	}
+
+	if (bFound)
+	{
+		return nNum;
+	}
+	else
+	{
+		return -1;
 	}
 }

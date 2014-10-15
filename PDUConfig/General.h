@@ -1,7 +1,8 @@
 #ifndef _GEN_DATA_DEFN_657456364567634435412
 	#define _GEN_DATA_DEFN_657456364567634435412
 
-
+#define	IDC_DATE_HIRED					0x60
+#define	IDC_TIME_HIRED					0x61
 #define MAX_PDU_BUFF_SIZE				65
 #define OUTLET_ID						0
 #define OUTLET_NM_ID					1
@@ -47,6 +48,7 @@ typedef enum _PAGES_IDx
 {
 	ID_PAGE_NETWORK = 0,
 	ID_PAGE_SNMP,
+	ID_PAGE_SNMP_VERSION,
 	ID_PAGE_EMAIL,
 	ID_PAGE_GENERAL,
 	ID_PAGE_PDU_SETTING,
@@ -98,7 +100,22 @@ typedef enum _COLMN_IDx
 	PDU_ALERT_ENB_HCA,
 	PDU_ALERT_HCA_MAX_GRAC_PER,
 	PDU_ALERT_HCA_THRES_VALUE,
-	PDU_FACTORY_RESET
+	PDU_FACTORY_RESET,
+	PDU_PRODUCT_GROUP,
+	PDU_BANK_PHASE_ID,
+	PDU_CAPACITY,
+	PDU_BANK_CAPACITY,
+	PDU_OUTLET_CAPACITY,
+	PDU_MONITOR_ONLY,
+	PDU_FULL_CONTROL,
+	PDU_OUTLET_VOLTAGE,
+	PDU_OUTLET_FREQUENCY,
+	PDU_SET_DATE_TIME,
+	PDU_NTP_SETTINGS,
+	PDU_NTP_DATE_TIME,
+	PDU_SNMP_V3_SETTINGS,
+	PDU_NET_SETTINGS,
+	PDU_WRITE_OVER
 }COLMN_ID;
 
 #pragma pack(1)
@@ -136,9 +153,44 @@ typedef struct PDU_CONFIG_VARBSx
 	BYTE		byEnbAlertHCA[MAX_NUM_OUTLETS];				// ALERT HIGH CURRENT ENABLE STATUS
 	DWORD		dwHCAMaxGracPer[MAX_NUM_OUTLETS];			// HCA MAX GRACE PERIOD
 	float		fHCAThresValue[MAX_NUM_OUTLETS];			// HCA THRESHOLD VALUE
+	BYTE 		bNtpEnabled;
+	float 		fNtpZone;
+	BYTE		byTimeZoneDateTime[18];						// TimeZone Date & Time to Set it manually
+	BYTE		bySNMPV3_Enabled;
+	BYTE		byAuthLevel;
+	BYTE		bySNMPV3_UserName[16];
+	BYTE		byAuthPassword[16];
+	BYTE		byAuthHashType;
+	BYTE		byPrivPassword[16];
+	BYTE		byPrivType;
+	BYTE		byTelnetEnabled;
+	BYTE		byHTTPEnabled;
+	BYTE		byHTTPSEnabled;
 
 } PDU_CONFIG_INFO, *PPDU_CONFIG_INFO;
 #pragma pack()
+
+#pragma pack(1)
+typedef struct _NTP_SETTINGx
+{
+	BYTE 	bEnabled;
+	float 	fNtpZone;
+
+}NTP_SETTINGS_INFO, *PNTP_SETTINGS_INFO;
+#pragma pack()
+
+#pragma pack(1)
+typedef struct x_SNMPV3_SETTINGS
+{
+	BYTE	byEnabled;
+	BYTE	byAuthLevel;
+	BYTE	byUserName[16];
+	BYTE	byAuthPassword[16];
+	BYTE	byAuthHashType;
+	BYTE	byPrivPassword[16];
+	BYTE	byPrivType;
+
+}SNMPV3_SETTINGS, *PSNMPV3_SETTINGS;
 
 #pragma pack(1)
 typedef struct _OUTLET_NUM_ALERT_INFOx

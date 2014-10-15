@@ -10,6 +10,7 @@
 #include "PageGeneral.h"
 #include "PagePDU.h"
 #include "PageAlert.h"
+#include "DlgSNMPVer.h"
 #include "afxwin.h"
 #include "PopUp.h"
 
@@ -51,6 +52,7 @@ public:
 	CPageGeneral			*m_pPageGeneral;
 	CPagePDU				*m_pPagePDU;
 	CPageAlert				*m_pPageAlert;
+	CDlgSNMPVer				*m_pPageSNMPVer;
 	CString					cszCurrPath;
 	CString					cszBasePath;
 	CStringArray			m_cszPDUList;
@@ -60,6 +62,7 @@ public:
 	CStringArray			m_cszPidValues;
 	CStringArray			m_cszVidValues;
 	CPopUp					*m_cPopUpWnd;
+	float					m_fTimeZones[33];
 
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedClearAll();
@@ -73,8 +76,10 @@ public:
 	BOOL WriteConfigData();
 	BOOL LoadVidPidValues();
 	BOOL GeneratePDUNames();
+	void InitiateTimeZoneValues();
 	void ShowPopupDlg(BYTE byType);
 	BOOL OpenCurrPage(int nPageNo);
+	int GetTimeZonePos(float fValue);
 	void PduEnumerateDevice(BOOL bWrLog);
 	BOOL ReadPDUSettingsInfo(UINT nPDUNum);
 	BOOL UpdateInfoInAllPages(UINT nPageNum);

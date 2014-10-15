@@ -1,3 +1,7 @@
+CyberSwitching User Configuration Application V1.0.0.2
+------------------------------------------------------
+1. Updated UI and added support for the changes.
+
 CyberSwitching User Configuration Application V1.0.0.1
 ------------------------------------------------------
 

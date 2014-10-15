@@ -1,7 +1,7 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
-
+#include "General.h"
 
 // CPageSNMP dialog
 
@@ -27,10 +27,21 @@ public:
 	afx_msg void OnBnClickedCheckSnmpTrap();
 
 	CButton			m_cChkSNMPTrap;
+	CIPAddressCtrl	m_cReceIPAddr;
+	CEdit			m_cEditSnmpTrapPortNum;
+	CDateTimeCtrl	*m_ctrlDateHired;
+	CDateTimeCtrl	*m_ctrlTimeHired;
+	CButton			m_cBtnEnbNTPDateTime;
+	CEdit			m_cEditDateTimeServers;
+	CComboBox		m_cComboTimeZone;
 
 	void EnableSNMPTrapSettings(BOOL bEnabled);
-	CEdit m_cEditReadCmnty;
-	CEdit m_cWriteCmnty;
-	CIPAddressCtrl m_cReceIPAddr;
-	CEdit m_cEditSnmpTrapPortNum;
+	void AddAllTimeZones();
+	void CopyDateTime(CString cszDateTimeStr);
+
+
+	
+	afx_msg void OnBnClickedCheckEnbNtpDtTm();
+
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

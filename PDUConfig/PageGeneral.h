@@ -29,4 +29,7 @@ public:
 	CEdit m_cEditGenStaggerOffDelay;
 	afx_msg void OnEnChangeGenStaggerOnDelay();
 	afx_msg void OnEnChangeGenStaggerOffDelay();
+	CButton m_cCheckEnbTelnet;
+	CButton m_cCheckEnbHTTP;
+	CButton m_cCheckEnbHTTPS;
 };
