@@ -1,0 +1,586 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\PDUApp.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\PDUApp.ico"
+IDI_ICON_GRAY           ICON                    "res\\Gray_App.ico"
+IDI_ICON_GREEN          ICON                    "res\\Green_App.ico"
+IDI_ICON_RED            ICON                    "res\\Red_App.ico"
+IDI_ICON_BANK           ICON                    "res\\Bank_App.ico"
+IDI_ICON_PDU            ICON                    "res\\PDU_App.ico"
+IDI_ICON_ERROR          ICON                    "res\\error.ico"
+IDI_ICON_HIGH           ICON                    "res\\high.ico"
+IDI_ICON_LOW            ICON                    "res\\low.ico"
+IDI_ICON_WARN           ICON                    "res\\warning.ico"
+IDI_ICON_CRIC           ICON                    "res\\crictical.ico"
+IDI_ICON_PASS           ICON                    "res\\success.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+IDB_SPLASH              BITMAP                  "res\\Splash.bmp"
+IDB_BITMAP1             BITMAP                  "res\\bmap1.bmp"
+IDB_BITMAP2             BITMAP                  "res\\bmap2.bmp"
+IDB_BITMAP_PPW          BITMAP                  "res\\PPW.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR  16, 15
+BEGIN
+    BUTTON      ID_EDIT_CUT
+    BUTTON      ID_EDIT_COPY
+    BUTTON      ID_EDIT_PASTE
+    SEPARATOR
+    BUTTON      ID_APP_ABOUT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_OUTLET_LED MENU 
+BEGIN
+    POPUP "Outlet"
+    BEGIN
+        MENUITEM "On",                          ID_OUTLET_ON
+        MENUITEM "Off",                         ID_OUTLET_OFF
+        MENUITEM "Reboot",                      ID_OUTLET_REBOOT
+    END
+END
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Refresh",                    ID_OUTLET_REFRESH, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About PDUApp...",            ID_APP_ABOUT
+    END
+END
+
+IDR_MENU_LOG MENU 
+BEGIN
+    POPUP "Log"
+    BEGIN
+        MENUITEM "&Delete",                     ID_LOG_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",                 ID_LOG_SELECTALL
+        MENUITEM "D&eselect All",               ID_LOG_DESELECTALL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS 
+BEGIN
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 283, 73
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About PDUApp"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,21,20
+    LTEXT           "",IDC_STATIC_MAIN_TXT,40,15,217,8,SS_NOPREFIX
+    LTEXT           "",IDC_STATIC_COPY_TXT,41,31,231,8
+    DEFPUSHBUTTON   "OK",IDOK,226,51,50,16,WS_GROUP
+END
+
+IDD_DLG_RIGHT DIALOGEX 0, 0, 195, 338
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_STATIC_OUTLET_VAL,7,3,178,213,BS_CENTER
+    LTEXT           "VOLTAGE :",IDC_STATIC_VOLTAGE,21,29,82,10
+    LTEXT           "CURRENT :",IDC_STATIC_CURRENT,21,59,82,10
+    LTEXT           "FREQUENCY :",IDC_STATIC_FREQ,21,89,82,10
+    LTEXT           "APPARENT POWER :",IDC_STATIC_APPPOWER,21,119,93,10
+    LTEXT           "REAL POWER :",IDC_STATIC_REALPOWER,21,149,70,10
+    LTEXT           "POWER FACTOR :",IDC_STATIC_POWFAC,21,179,77,12
+    GROUPBOX        "",IDC_STATIC_POLL_CONF,7,261,181,73
+    LTEXT           "",IDC_STATIC_POLL,15,281,55,8
+    EDITTEXT        IDC_EDIT_SECS,74,278,29,14,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "",IDC_STATIC_SECS,107,281,43,8
+    PUSHBUTTON      "",IDC_BUT_SET,73,301,50,14
+    PUSHBUTTON      "",IDC_BUT_START_STOP,129,301,50,14
+    CTEXT           "",IDC_STATIC_BG_TEXT,14,90,166,49
+    EDITTEXT        IDC_ST_CURR_VAL,119,29,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_ST_VOL_VAL,119,59,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_ST_FREQ_VAL,119,89,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_ST_APPPOW_VAL,119,119,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_ST_REALPOW_VAL,119,149,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_ST_POWFAC_VAL,119,179,64,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_EDIT_MOD_NM,21,41,157,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_MOD_NO,21,71,157,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_SER_NO,21,101,157,13,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_EDIT_FIRM_VER,21,131,157,13,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_SPLASH DIALOGEX 0, 0, 266, 61
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         133,IDC_PIC_SPLASH,"Static",SS_BITMAP,0,0,267,62
+END
+
+IDD_DLG_ALERT DIALOGEX 0, 0, 451, 94
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "",IDC_FRAME_VIR_CIR_BRK,12,10,135,72
+    CONTROL         "",IDC_CHK_VIR_CIR_BRK_ENB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,21,51,10
+    LTEXT           "",IDC_STATIC_THRES_HOLD_VCB,58,41,35,8
+    EDITTEXT        IDC_EDIT_THRES_VCB,94,39,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_A_VCB,129,41,8,8
+    LTEXT           "",IDC_STATIC_MAX_GRC_PER_VCB,33,59,60,8
+    EDITTEXT        IDC_EDIT_MGP_VCB,94,58,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_SEC_VCB,129,60,14,8
+    GROUPBOX        "",IDC_FRAME_HIGH_CURR,158,10,135,72
+    CONTROL         "",IDC_CHK_HIGH_CURR_ENB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,166,21,51,10
+    LTEXT           "",IDC_STATIC_THRES_HOLD_HCA,204,41,35,8
+    EDITTEXT        IDC_EDIT_THRES_HCA,240,39,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_A_HCA,275,41,8,8
+    LTEXT           "",IDC_STATIC_MAX_GRC_PER_HCA,179,59,60,8
+    EDITTEXT        IDC_EDIT_MGP_HCA,240,58,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_SEC_HCA,275,60,14,8
+    GROUPBOX        "",IDC_FRAME_LOW_CURR,304,10,135,72
+    CONTROL         "",IDC_CHK_LOW_CURR_ENB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,312,21,51,10
+    LTEXT           "",IDC_STATIC_THRES_HOLD_LCA,350,41,35,8
+    EDITTEXT        IDC_EDIT_THRES_LCA,386,39,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_A_LCA,421,41,8,8
+    LTEXT           "",IDC_STATIC_MAX_GRC_PER_LCA,325,59,60,8
+    EDITTEXT        IDC_EDIT_MGP_LCA,386,58,30,14,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "",IDC_STATIC_SEC_LCA,421,60,14,8
+END
+
+IDD_DLG_STATIC_INFO DIALOGEX 0, 0, 345, 377
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "",IDCANCEL,283,355,50,14
+    RTEXT           "Model Name :",IDC_STATIC_MODEL_NM,38,22,45,8
+    GROUPBOX        "",IDC_STATIC_FRAME,11,8,321,98
+    EDITTEXT        IDC_EDIT_MNM,89,20,234,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Model Number :",IDC_STATIC_MODEL_NUM,31,43,52,8
+    EDITTEXT        IDC_EDIT_MNO,89,41,234,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Serial Number :",IDC_STATIC_SER_NUM,33,64,50,8
+    EDITTEXT        IDC_EDIT_SNO,89,62,234,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Firmware Version :",IDC_STATIC_FIRM_VERS,22,85,61,8
+    EDITTEXT        IDC_EDIT_FVERS,89,83,234,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Manufacturing Date :",IDC_STATIC_INPUT_CURR_RATE,22,125,75,8
+    EDITTEXT        IDC_EDIT_ICR,104,123,219,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Stagger On Delay :",IDC_STATIC_RATED_VOLT,27,146,70,8
+    EDITTEXT        IDC_EDIT_RV,104,144,219,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Stagger Off Delay :",IDC_STATIC_RATED_POW,30,167,67,8
+    EDITTEXT        IDC_EDIT_RP,104,165,219,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Number of Outlets :",IDC_STATIC_NO_OF_OUTLETS,31,208,66,8
+    EDITTEXT        IDC_EDIT_NOO,104,206,219,14,ES_AUTOHSCROLL | ES_READONLY
+    RTEXT           "Number of Banks :",IDC_STATIC_NO_OF_BANKS,36,230,61,8
+    EDITTEXT        IDC_EDIT_NOB,104,227,219,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_LIST_BANK_OUTLETS,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,31,263,291,56
+    LTEXT           "Number of Outlets per Bank :",IDC_STATIC_NO_OF_OUTLETS_PER_BANK,31,250,102,8
+    RTEXT           "Number of Inputs :",IDC_STATIC_NUM_OF_INPUTS,29,330,68,8
+    EDITTEXT        IDC_EDIT_NOI,104,327,219,14,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "",IDC_STATIC_FRAME2,11,111,321,78
+    GROUPBOX        "",IDC_STATIC_FRAME3,11,193,321,157
+END
+
+IDD_ALERT_POPUP DIALOGEX 0, 0, 266, 61
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_POPUP
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         150,IDC_STATIC_PP,"Static",SS_BITMAP,0,0,267,62
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "CyberSwitch"
+            VALUE "FileDescription", "ePower Management"
+            VALUE "FileVersion", "1.0.0.3"
+            VALUE "InternalName", "PDUApp.exe"
+            VALUE "LegalCopyright", "Copyright © 2013 by CyberSwitching® Inc. ALL RIGHTS RESERVED."
+            VALUE "OriginalFilename", "PDUApp.exe"
+            VALUE "ProductName", "ePower USB Series"
+            VALUE "ProductVersion", "1.0.0.3"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 276
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_DLG_RIGHT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 188
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 331
+    END
+
+    IDD_SPLASH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 259
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 54
+    END
+
+    IDD_DLG_ALERT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 444
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 87
+    END
+
+    IDD_DLG_STATIC_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 338
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 370
+    END
+
+    IDD_ALERT_POPUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 259
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 54
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "res\\ePower.xml"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
+    IDS_STR_PDU_HEADER_NM   "PDU DEVICE(S)"
+    IDS_STR_VOLTAGE_HEADER_NM "VOLTAGE"
+    IDS_STR_CURRENT_HEADER_NM "CURRENT"
+    IDS_STR_POWER_FACTOR_HEADER_NM "POWER FACTOR"
+    IDS_STR_CREST_FACTOR_HEADER_NM "CREST FACTOR"
+    IDS_STR_FREQ_HEADER_NM  "FREQUENCY"
+    IDS_STR_REAL_POWER_HEADER_NM "REAL POWER"
+    IDS_STR_NO_MEM          "Unable to allocate memory for this application.\nPlease close some of the application(s) which are currently running and then try again."
+    IDS_STR_PDU_NM          "PDU DEVICE %u"
+    IDS_STR_NO_PDU_MESS     "No PDU device connected to the system. Try again after connected the device."
+    IDS_STR_BANK_NM         "BANK %u"
+END
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "CyberSwitching® ePower V1.03"
+    IDS_STR_START           "ST&ART"
+    IDS_STR_STOP            "ST&OP"
+    IDS_STR_MIN_POLL_SEC_GRT_5SECS_MESS 
+                            "Minimum Polling seconds should be greater than or equal to 5 seconds"
+    IDS_STR_MAX_POLL_SEC    "Maximum Polling seconds should be less than or equal to 900 seconds"
+    IDS_STR_BG_TEXT         "Click on any PDU (or) OUTLET to view the detailed information..."
+    IDS_STR_PDU_DEV_NM_CHECK "PDU DEVICE "
+    IDS_STR_BANK_NM_CHECK   "BANK "
+    IDS_STR_CURR_NM         "CURRENT :"
+    IDS_STR_VOLT_NM         "VOLTAGE :"
+    IDS_STR_FREQ_NM         "FREQUENCY :"
+    IDS_STR_APP_POW_NM      "APPARENT POWER :"
+    IDS_STR_REAL_POW_NM     "REAL POWER :"
+    IDS_STR_POW_FAC_NM      "POWER FACTOR :"
+    IDS_STR_MODEL_NM        "MODEL NAME:"
+    IDS_STR_MODEL_NUM       "MODEL NUMBER:"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "ePower"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STR_OUTLET_NM       "OUTLET %u"
+    IDS_STR_APP_TITLE       "ePower USB Application"
+    IDS_STR_OUTLET_NM_CHECK "OUTLET"
+    IDS_STR_SEL_OUTLET_RELAY_MESS "Selected  %s  is %s Successfully..."
+    IDS_STR_SEL_OUTLET_RELAY_ERR "Unable to %s the selected  %s..."
+    IDS_STR_ON              "ON"
+    IDS_STR_OFF             "OFF"
+    IDS_STR_REBOOT          "REBOOT"
+    IDS_STR_REBOOTED        "REBOOTED"
+    IDS_STR_SEL_OUTLET_ERR  "Please select a valid OUTLET..."
+    IDS_STR_APPR_POWER_HEADER_NM "APPARENT POWER"
+    IDS_STR_WND_HAN_GET_FAIL 
+                            "Failed to get the window handle. Close and launch again the application"
+    IDS_STR_POLL_CONF       "Polling configuration:"
+    IDS_STR_POLL_INTER      "Polling Intervals:"
+    IDS_STR_SECS            "Second(s)"
+    IDS_STR_SET             "S&ET"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STR_SERIAL_NUM      "SERIAL NUMBER:"
+    IDS_STR_FIRM_VERS       "FIRMWARE VERSION:"
+    IDS_STR_UNABLE_GET_STATIC_ERR_MESS 
+                            "Unable to get the selected PDU static information. Try again..."
+    IDS_STR_VCB_NM          "Virtual Circuit Breaker:"
+    IDS_STR_ENABLED         "E&nabled"
+    IDS_STR_THRESHOLD       "Threshold:"
+    IDS_STR_HIGH_CURR_ALRT  "High Current Alert:"
+    IDS_STR_LOW_CURR_ALRT   "Low Current Alert:"
+    IDS_STR_ALERT_CONF      "ALERT CONFIGURATION"
+    IDS_STR_A               "A"
+    IDS_STR_MAX_GRC_PER     "Max Grace Period:"
+    IDS_STR_SEC             "sec"
+    IDS_STR_DLG_STATIC_INFO "%s  Static Information"
+    IDS_STR_EXIT            "E&xit"
+    IDS_STR_HIGH_CURR_MESS  "%s : Load on %s in Bank %d exceeds the safety limit and reaches %f"
+    IDS_STR_LOW_CURR_MESS   "%s : Load on %s in Bank %d decreases below the safety limit and reaches %f"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STR_NO_BANK_OUTLET_MESS 
+                            "Unable to get the Bank and Outlet details. Check whether it was configured using ePower MFG tool."
+    IDS_STR_ZERO_BANK_OUTLET_MESS 
+                            "Static Information is not available for the %s"
+    IDS_STR_FETCH_OUTLET_DATA_ERR 
+                            "Unable to fetch the %s -> %s -> %s values like Voltage, Current, Frequency, Apparent Power and Real Power."
+    IDS_STR_SER_NUM_ERR     "Serial Number is not available. Configure using manufacture tool and try again."
+    IDS_STR_COPY_TXT        "Copyright © 2013 by CyberSwitching® Inc. ALL RIGHTS RESERVED."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\PDUApp.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
