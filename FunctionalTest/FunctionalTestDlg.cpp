@@ -358,6 +358,7 @@ BOOL CFunctionalTestDlg::StartProcess()
 	float				fVoltageON = 0.0;
 	BOOL				bTestFail = FALSE;
 	BOOL				bResult = FALSE;
+	BYTE				byRetry = 0;
 	BYTE				byOCB = 0;
 	BYTE				byRealOutlet = 0;
 	BYTE				byErrorCode = 0;
@@ -957,7 +958,7 @@ BOOL CFunctionalTestDlg::StartProcess()
 				byOutletResult[nCount] = 0;
 
 				cszLoad.Empty();
-				cszLoad.Format(_T("Current value taken when the Outlet %u is in ON state is less than the Current value taken when the Outlet %u is in OFF state..."), byOutlet, byOutlet);
+				cszLoad.Format(_T("Current value taken when the Outlet %u is in ON state is less than or equal to the Current value taken when the Outlet %u is in OFF state..."), byOutlet, byOutlet);
 				cszErrLogs.Add(cszLoad);
 			}
 
@@ -1091,40 +1092,57 @@ BOOL CFunctionalTestDlg::GetCurrVolt(float *fCurrent, float *fVoltage, BYTE byBa
 {
 	BOOL				bLog = TRUE;
 	BYTE				byErrCode = 0;
+	BYTE				byRetry = 0;
 	CString				cszLoad;
 	DWORD				dwByteWritten = 0;
 	DWORD				NumberOfBytesRead = 0;
 	BYTE				InputPacketBuff[MAX_PDU_BUFF_SIZE] = {0};
 	union IntFloat		val; 
-	/* -----------------------------------------------------------------------
-		Send the Pass through Command to get VOLTAGE
-	----------------------------------------------------------------------- */
-	dwByteWritten = 0;
-	NumberOfBytesRead = 0;
-	memset(InputPacketBuff, 0, sizeof(InputPacketBuff));
 
-	InputPacketBuff[0] = ZERO_ID; //The first byte is the "Report ID" and does not get transmitted over the USB bus.  Always set = 0.
-	InputPacketBuff[1] = CAN_CMD_ID;
-	InputPacketBuff[2] = byBank;
-	InputPacketBuff[3] = TIME_STAMP_ID;			// Time Stamp
-	InputPacketBuff[4] = VOLTAGE_ID;				// Voltage
-	InputPacketBuff[5] = byOutlet;
-	InputPacketBuff[6] = ZERO_ID;
-	InputPacketBuff[7] = ZERO_ID;
-	InputPacketBuff[8] = ZERO_ID;
-	InputPacketBuff[9] = ZERO_ID;
-	
-	PduWriteReadBuffer(m_cszPDUAddr.GetBuffer(m_cszPDUAddr.GetLength()), InputPacketBuff, &dwByteWritten, FALSE, &byErrCode, bLog);
-	m_cszPDUAddr.ReleaseBuffer();
+	do
+	{
 
-	cszLoad.Empty();
-	cszLoad.Format(_T("0X%02x%02x%02x%02x"), InputPacketBuff[4], InputPacketBuff[5], InputPacketBuff[6], InputPacketBuff[7]);
+		/* -----------------------------------------------------------------------
+			Send the Pass through Command to get VOLTAGE
+		----------------------------------------------------------------------- */
+		dwByteWritten = 0;
+		NumberOfBytesRead = 0;
+		memset(InputPacketBuff, 0, sizeof(InputPacketBuff));
 
-	val.i = strtoul(cszLoad.GetBuffer(cszLoad.GetLength()), NULL, 16);
-	cszLoad.ReleaseBuffer();
+		InputPacketBuff[0] = ZERO_ID; //The first byte is the "Report ID" and does not get transmitted over the USB bus.  Always set = 0.
+		InputPacketBuff[1] = CAN_CMD_ID;
+		InputPacketBuff[2] = byBank;
+		InputPacketBuff[3] = TIME_STAMP_ID;			// Time Stamp
+		InputPacketBuff[4] = VOLTAGE_ID;				// Voltage
+		InputPacketBuff[5] = byOutlet;
+		InputPacketBuff[6] = ZERO_ID;
+		InputPacketBuff[7] = ZERO_ID;
+		InputPacketBuff[8] = ZERO_ID;
+		InputPacketBuff[9] = ZERO_ID;
+		
+		PduWriteReadBuffer(m_cszPDUAddr.GetBuffer(m_cszPDUAddr.GetLength()), InputPacketBuff, &dwByteWritten, FALSE, &byErrCode, bLog);
+		m_cszPDUAddr.ReleaseBuffer();
 
-	*fVoltage = val.f;
+		cszLoad.Empty();
+		cszLoad.Format(_T("0X%02x%02x%02x%02x"), InputPacketBuff[4], InputPacketBuff[5], InputPacketBuff[6], InputPacketBuff[7]);
 
+		val.i = strtoul(cszLoad.GetBuffer(cszLoad.GetLength()), NULL, 16);
+		cszLoad.ReleaseBuffer();
+
+		*fVoltage = val.f;
+
+		if (val.f != 0.0)
+		{
+			break;
+		}
+
+		byRetry++;
+
+	} while (byRetry < 3);
+
+
+	WaitingText(2);
+	RefreshOurApp();
 	/* -----------------------------------------------------------------------
 		Send the Pass through Command to get CURRENT
 	----------------------------------------------------------------------- */
@@ -1153,6 +1171,8 @@ BOOL CFunctionalTestDlg::GetCurrVolt(float *fCurrent, float *fVoltage, BYTE byBa
 	cszLoad.ReleaseBuffer();
 
 	*fCurrent = val.f;
+
+	RefreshOurApp();
 
 	return TRUE;
 }
@@ -1450,8 +1470,12 @@ BOOL CFunctionalTestDlg::PduWriteReadBuffer(TCHAR *byPduAdd, BYTE byDataBuffer[]
 
 		nNumPass++;
 
-		if ((byDataBuffer[1] == 0xFF) && (byDataBuffer[2] == 0xEE) && (nNumPass >= 3))
+		if ((byDataBuffer[1] == 0xFF) && (byDataBuffer[2] == 0xEE) && (nNumPass >= 6))
+		{
 			break;
+		}
+
+		Sleep(1000);
 
 	} while((byDataBuffer[1] == 0xFF) && (byDataBuffer[2] == 0xEE));
 
@@ -1787,6 +1811,7 @@ BOOL CFunctionalTestDlg::PduSwitchOutletState(CHAR *byPduadd, BYTE byOCB, BYTE b
 	BOOL									bRet = FALSE;
 	BOOL									bWriteMode = FALSE;
 	BYTE									byType = 0;
+	BYTE									byRetry = 0;
 	CHAR									bySection[MAX_PATH] = {0};
 	CHAR									byLocalBuf[MAX_PATH] = {0};
 	BYTE									byOCBStateBuff[MAX_PDU_BUFF_SIZE] = {0};		//Allocate a memory buffer equal to our endpoint size + 1
@@ -1806,38 +1831,45 @@ BOOL CFunctionalTestDlg::PduSwitchOutletState(CHAR *byPduadd, BYTE byOCB, BYTE b
 	szTmpstring.MakeReverse();
 	wsprintf(bySection, "%s_%s_%d_%d", ST_SECT_OCBSTATE, szTmpstring, byOCB, byOutlet);
 
-	/* -----------------------------------------------------------------------
-		Send the Pass through Command to devcie
-	----------------------------------------------------------------------- */
-	dwByteWritten = 0;
-	memset(byOCBStateBuff, 0, sizeof(byOCBStateBuff));
-	byOCBStateBuff[0] = ZERO_ID; //The first byte is the "Report ID" and does not get transmitted over the USB bus.  Always set = 0.
-	byOCBStateBuff[1] = RELAY_STATE;
-	byOCBStateBuff[2] = byOCB;
-	byOCBStateBuff[3] = byOutlet;
-	byOCBStateBuff[4] = byCurrState;
-	byOCBStateBuff[5] = 0x01;
-
-
-	Sleep(dwDelaySecs);
-
-	if (byCurrState == RELAY_REBOOT)
+	do
 	{
-		bWriteMode = TRUE;
-	}
 
-	PduWriteReadBuffer(byPduadd, byOCBStateBuff, &dwByteWritten, bWriteMode, byErrCode, bLog);
+		/* -----------------------------------------------------------------------
+			Send the Pass through Command to devcie
+		----------------------------------------------------------------------- */
+		dwByteWritten = 0;
+		memset(byOCBStateBuff, 0, sizeof(byOCBStateBuff));
+		byOCBStateBuff[0] = ZERO_ID; //The first byte is the "Report ID" and does not get transmitted over the USB bus.  Always set = 0.
+		byOCBStateBuff[1] = RELAY_STATE;
+		byOCBStateBuff[2] = byOCB;
+		byOCBStateBuff[3] = byOutlet;
+		byOCBStateBuff[4] = byCurrState;
+		byOCBStateBuff[5] = 0x01;
 
-	if ((byOCBStateBuff[1] == byOutlet) && (byOCBStateBuff[2] == byCurrState))
-	{
-		bRet = TRUE;
-		WriteLogDetails(bySection, _T("OCB STATE CHANGED -- PASS"));
+		Sleep(dwDelaySecs);
+
+		if (byCurrState == RELAY_REBOOT)
+		{
+			bWriteMode = TRUE;
+		}
+
+		PduWriteReadBuffer(byPduadd, byOCBStateBuff, &dwByteWritten, bWriteMode, byErrCode, bLog);
+
+		if ((byOCBStateBuff[1] == byOutlet) && (byOCBStateBuff[2] == byCurrState))
+		{
+			bRet = TRUE;
+			WriteLogDetails(bySection, _T("OCB STATE CHANGED -- PASS"));
+			break;
+		}
+		else 
+		{
+			bRet = FALSE;
+			WriteLogDetails(bySection, _T("OCB STATE CHANGED -- FAIL"));
+		}
+
+		byRetry++;
 	}
-	else 
-	{
-		bRet = FALSE;
-		WriteLogDetails(bySection, _T("OCB STATE CHANGED -- FAIL"));
-	}
+	while (byRetry < 3);
 
 	return bRet;
 }

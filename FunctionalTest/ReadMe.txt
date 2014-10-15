@@ -1,3 +1,8 @@
+CyberSwitching Functional Test Application V1.04
+------------------------------------------------
+1. Updated to retry the command to fetch Voltage value for three times if it fails.
+2. Updated to retry the command to switch the outlet state for three times if it fails.
+
 CyberSwitching Functional Test Application V1.03
 ------------------------------------------------
 1. Updated to fetch and print the Current Value and Voltage Value while ON and OFF Outlets.
