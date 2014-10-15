@@ -83,7 +83,7 @@ CAPTION "About FunctionalTest"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,14,14,20,20
-    LTEXT           "FunctionalTest, Version 1.02",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "FunctionalTest, Version 1.03",IDC_STATIC,42,14,114,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2014",IDC_STATIC,42,26,114,8
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
@@ -91,7 +91,7 @@ END
 IDD_FUNCTIONALTEST_DIALOG DIALOGEX 0, 0, 406, 372
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Functional Test V1.02"
+CAPTION "Functional Test V1.03"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "E&xit",IDCANCEL,347,350,50,14
@@ -147,8 +147,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,2
- PRODUCTVERSION 1,0,0,2
+ FILEVERSION 1,0,0,3
+ PRODUCTVERSION 1,0,0,3
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -165,12 +165,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "CyberSwitching"
             VALUE "FileDescription", "Functional Test"
-            VALUE "FileVersion", "1.0.0.2"
+            VALUE "FileVersion", "1.0.0.3"
             VALUE "InternalName", "FunctionalTest.exe"
             VALUE "LegalCopyright", "(c) CyberSwitching.  All rights reserved."
             VALUE "OriginalFilename", "FunctionalTest.exe"
             VALUE "ProductName", "Functional Test"
-            VALUE "ProductVersion", "1.0.0.2"
+            VALUE "ProductVersion", "1.0.0.3"
         END
     END
     BLOCK "VarFileInfo"

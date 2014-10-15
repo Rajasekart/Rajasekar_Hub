@@ -81,7 +81,7 @@ BOOL CDlgSummary::OnInitDialog()
 	m_cListCtrlResult.InsertColumn(0, _T("PDU Device"), LVCFMT_LEFT, 162);
 	m_cListCtrlResult.InsertColumn(1, _T("Functional Test Result"), LVCFMT_LEFT, 156);
 
-	byCount = 0;
+	byCount = 1;
 	for (byNum = 1; byNum <= m_byTotalBanks; byNum++)
 	{
 		cszLoad.Empty();

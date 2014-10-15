@@ -372,6 +372,7 @@ BOOL CFunctionalTestDlg::StartProcess()
 	BYTE				byDataBuffer[66] = {0};
 	CString				cszLoad;
 	CString				cszBuffer;
+	CStringArray		cszErrLogs;
 
 	if (!m_bProcessStarted)
 	{
@@ -630,6 +631,10 @@ BOOL CFunctionalTestDlg::StartProcess()
 		{
 			nCount++;
 
+			bTestFail = FALSE;
+
+			cszErrLogs.RemoveAll();
+
 			RefreshOurApp();
 
 			if (!m_bProcessStarted)
@@ -732,6 +737,10 @@ BOOL CFunctionalTestDlg::StartProcess()
 			{
 				bTestFail = TRUE;
 				byOutletResult[nCount] = 0;
+
+				cszLoad.Empty();
+				cszLoad.Format(_T("Unable to power OFF the Outlet %u..."), byOutlet);
+				cszErrLogs.Add(cszLoad);
 			}
 
 			cszLoad.Empty();
@@ -769,18 +778,6 @@ BOOL CFunctionalTestDlg::StartProcess()
 			fCurrentOFF = 0.0;
 			fVoltageOFF = 0.0;
 			GetCurrVolt(&fCurrentOFF, &fVoltageOFF, byOCB, byRealOutlet);
-
-			cszLoad.Empty();
-			cszLoad.Format(_T("Current value : %.9f A"), fCurrentOFF);
-			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
-
-			m_cStaticBgTxt.SetWindowText(cszLoad);
-
-			cszLoad.Empty();
-			cszLoad.Format(_T("Voltage value : %.9f V"), fVoltageOFF);
-			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
-
-			m_cStaticBgTxt.SetWindowText(cszLoad);
 
 			// NEED TO ON THE OUTLET ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			cszLoad.Empty();
@@ -820,6 +817,10 @@ BOOL CFunctionalTestDlg::StartProcess()
 			{
 				bTestFail = TRUE;
 				byOutletResult[nCount] = 0;
+
+				cszLoad.Empty();
+				cszLoad.Format(_T("Unable to power ON the Outlet %u..."), byOutlet);
+				cszErrLogs.Add(cszLoad);
 			}
 
 			cszLoad.Empty();
@@ -858,18 +859,6 @@ BOOL CFunctionalTestDlg::StartProcess()
 			fVoltageON = 0.0;
 			GetCurrVolt(&fCurrentON, &fVoltageON, byOCB, byRealOutlet);
 
-			cszLoad.Empty();
-			cszLoad.Format(_T("Current value : %.9f A"), fCurrentON);
-			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
-
-			m_cStaticBgTxt.SetWindowText(cszLoad);
-
-			cszLoad.Empty();
-			cszLoad.Format(_T("Voltage value : %.9f V"), fVoltageON);
-			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
-
-			m_cStaticBgTxt.SetWindowText(cszLoad);
-
 			if (m_stPduSettings.byFinalRelease)
 			{
 				cszLoad.Empty();
@@ -893,6 +882,46 @@ BOOL CFunctionalTestDlg::StartProcess()
 
 			RefreshOurApp();
 
+			cszLoad.Empty();
+			cszLoad = _T("------------------------------------------------------------------------");
+			PrintBufferInTestInfoList(cszLoad, BLUE_TEXT);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Current & Voltage value taken when the outlet %u is in OFF state"), byOutlet);
+			PrintBufferInTestInfoList(cszLoad, BLUE_TEXT);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Current value : %.9f A"), fCurrentOFF);
+			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
+
+			m_cStaticBgTxt.SetWindowText(cszLoad);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Voltage value : %.9f V"), fVoltageOFF);
+			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
+
+			m_cStaticBgTxt.SetWindowText(cszLoad);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Current & Voltage value taken when the outlet %u is in ON state"), byOutlet);
+			PrintBufferInTestInfoList(cszLoad, BLUE_TEXT);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Current value : %.9f A"), fCurrentON);
+			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
+
+			m_cStaticBgTxt.SetWindowText(cszLoad);
+
+			cszLoad.Empty();
+			cszLoad.Format(_T("Voltage value : %.9f V"), fVoltageON);
+			PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
+
+			m_cStaticBgTxt.SetWindowText(cszLoad);
+
+			cszLoad.Empty();
+			cszLoad = _T("------------------------------------------------------------------------");
+			PrintBufferInTestInfoList(cszLoad, BLUE_TEXT);
+
 			if (!m_bProcessStarted)
 			{
 				cszLoad.Empty();
@@ -902,22 +931,70 @@ BOOL CFunctionalTestDlg::StartProcess()
 				return FALSE;
 			}
 
-			if ((100 > fVoltageOFF) || (100 > fVoltageON))
+			if (100 > fVoltageOFF)
 			{
 				bTestFail = TRUE;
 				byOutletResult[nCount] = 0;
+
+				cszLoad.Empty();
+				cszLoad.Format(_T("Voltage value is less than the value 100 when the Outlet %u is in OFF state..."), byOutlet);
+				cszErrLogs.Add(cszLoad);
+			}
+
+			if (100 > fVoltageON)
+			{
+				bTestFail = TRUE;
+				byOutletResult[nCount] = 0;
+
+				cszLoad.Empty();
+				cszLoad.Format(_T("Voltage value is less than the value 100 when the Outlet %u is in ON state..."), byOutlet);
+				cszErrLogs.Add(cszLoad);
 			}
 			
 			if (fCurrentOFF >= fCurrentON)
 			{
 				bTestFail = TRUE;
 				byOutletResult[nCount] = 0;
+
+				cszLoad.Empty();
+				cszLoad.Format(_T("Current value taken when the Outlet %u is in ON state is less than the Current value taken when the Outlet %u is in OFF state..."), byOutlet, byOutlet);
+				cszErrLogs.Add(cszLoad);
 			}
 
 			if (!bTestFail)
 			{
 				byOutletResult[nCount] = 1;
 			}
+
+			////////////////// ERROR LOG AREA ////////////////////////////////////////////////
+			cszLoad.Empty();
+			cszLoad = _T("------------------------------------------------------------------------");
+			PrintBufferInTestInfoList(cszLoad, RED_TEXT);
+
+			cszLoad.Empty();
+			cszLoad = _T("ERROR LOG :");
+			PrintBufferInTestInfoList(cszLoad, RED_TEXT);
+
+			if (cszErrLogs.GetCount())
+			{
+				for (int ne = 0; ne < cszErrLogs.GetCount(); ne++)
+				{
+					cszLoad.Empty();
+					cszLoad = cszErrLogs.ElementAt(ne);
+					PrintBufferInTestInfoList(cszLoad, RED_TEXT);
+				}
+			}
+			else
+			{
+				cszLoad.Empty();
+				cszLoad = _T("no error(s)");
+				PrintBufferInTestInfoList(cszLoad, GREEN_TEXT);
+			}
+
+			cszLoad.Empty();
+			cszLoad = _T("------------------------------------------------------------------------");
+			PrintBufferInTestInfoList(cszLoad, RED_TEXT);
+			//////////////////////////////////////////////
 
 			byRealOutlet++;
 
@@ -934,7 +1011,7 @@ BOOL CFunctionalTestDlg::StartProcess()
 	} // for byBank
 
 #if 1		// LOG PART
-	nCount = 0;
+	nCount = 1;
 	for (byNum = 1; byNum <= m_stCSDevInfo.byTotBanks; byNum++)
 	{
 		cszLoad.Empty();
@@ -974,7 +1051,7 @@ BOOL CFunctionalTestDlg::StartProcess()
 	cSummaryDlg.m_byTotalBanks = m_stCSDevInfo.byTotBanks;
 	cSummaryDlg.m_byTotalOutlets = m_stCSDevInfo.byOutletsPerBank;
 	cSummaryDlg.m_bTestResult = TRUE;
-	for (byNum = 0; byNum < m_stCSDevInfo.byTotOutlets; byNum++)
+	for (byNum = 1; byNum <= m_stCSDevInfo.byTotOutlets; byNum++)
 	{
 		if (byOutletResult[byNum] == 0)
 		{

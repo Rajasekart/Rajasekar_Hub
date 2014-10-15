@@ -1,3 +1,8 @@
+CyberSwitching Functional Test Application V1.03
+------------------------------------------------
+1. Updated to fetch and print the Current Value and Voltage Value while ON and OFF Outlets.
+2. Updated to log the Error details after each process.
+
 CyberSwitching Functional Test Application V1.02
 ------------------------------------------------
 1. Updated the UI controls and updated functionalities.
